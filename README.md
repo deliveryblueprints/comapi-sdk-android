@@ -1,8 +1,8 @@
-#Android SDK for Comapi
+# Android SDK for Comapi
 
 Client to connect your Android application with [Comapi](http://comapi.com/) services and add it as a channel to our cloud messaging platform.
 
-##Download
+## Download
 
 Via Maven 
 
