@@ -37,6 +37,17 @@ public class Sender {
     protected String name;
 
     /**
+     * Recommended constructor.
+     *
+     * @param id Sender profile ID.
+     * @param name Sender name.
+     */
+    public Sender(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    /**
      * Message sender unique identifier
      *
      * @return Message sender unique identifier

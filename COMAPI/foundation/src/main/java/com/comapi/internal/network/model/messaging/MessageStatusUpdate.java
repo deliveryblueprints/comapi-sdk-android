@@ -41,6 +41,10 @@ public class MessageStatusUpdate extends BaseMessageStatus {
         messageIds = new HashSet<>();
     }
 
+    public Set<String> getMessageIds() {
+        return messageIds;
+    }
+
     public static Builder builder() {
         return new Builder();
     }

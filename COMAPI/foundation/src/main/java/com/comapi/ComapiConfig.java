@@ -21,6 +21,8 @@
 package com.comapi;
 
 import com.comapi.internal.IMessagingListener;
+import com.comapi.internal.IProfileListener;
+import com.comapi.internal.IStateListener;
 
 /**
  * Class describing the initial configuration for a {@link ComapiClient} instance.
@@ -32,6 +34,10 @@ public class ComapiConfig extends BaseConfig<ComapiConfig> {
 
     private IMessagingListener messagingListener;
 
+    private IStateListener stateListener;
+
+    private IProfileListener profileListener;
+
     /**
      * Gets Comapi message listener.
      *
@@ -42,6 +48,24 @@ public class ComapiConfig extends BaseConfig<ComapiConfig> {
     }
 
     /**
+     * Gets listener for SDK state changes.
+     *
+     * @return Listener for SDK state changes.
+     */
+    IStateListener getStateListener() {
+        return stateListener;
+    }
+
+    /**
+     * Gets listener for profile changes.
+     *
+     * @return Listener for profile changes.
+     */
+    IProfileListener getProfileListener() {
+        return profileListener;
+    }
+
+    /**
      * Sets Comapi message listener.
      *
      * @param messagingListener Comapi Socket events listener.
@@ -49,6 +73,30 @@ public class ComapiConfig extends BaseConfig<ComapiConfig> {
      */
     public <E extends MessagingListener> ComapiConfig messagingListener(E messagingListener) {
         this.messagingListener = messagingListener;
+        return getThis();
+    }
+
+    /**
+     * Sets listener for SDK state changes.
+     *
+     * @param stateListener {@link StateListener} callback for state changes.
+     * @param <E>           Extends {@link StateListener}
+     * @return BaseURIs instance with new value set.
+     */
+    public <E extends StateListener> ComapiConfig stateListener(E stateListener) {
+        this.stateListener = stateListener;
+        return getThis();
+    }
+
+    /**
+     * Sets listener for profile changes.
+     *
+     * @param profileListener {@link ProfileListener} callback for profile changes.
+     * @param <E>             Extends {@link ProfileListener}
+     * @return BaseURIs instance with new value set.
+     */
+    public <E extends ProfileListener> ComapiConfig profileListener(E profileListener) {
+        this.profileListener = profileListener;
         return getThis();
     }
 

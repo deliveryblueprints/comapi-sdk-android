@@ -45,6 +45,25 @@ public class ComapiResult<T> {
     private final String message;
 
     /**
+     * Constructor for testing purpose.
+     *
+     * @param result       Call result body.
+     * @param isSuccessful True if the call was successful.
+     * @param eTag         ETag for tracking remote data version.
+     * @param code         Code of the service response.
+     * @param message      Message in the response.
+     * @param errorBody    Error details.
+     */
+    protected ComapiResult(T result, boolean isSuccessful, String eTag, int code, String message, String errorBody) {
+        this.result = result;
+        this.eTag = eTag;
+        this.isSuccessful = isSuccessful;
+        this.code = code;
+        this.message = message;
+        this.errorBody = errorBody;
+    }
+
+    /**
      * Recommended constructor. Translates Retrofit to Comapi service response.
      *
      * @param response Retrofit service response.

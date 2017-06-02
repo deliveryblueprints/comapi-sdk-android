@@ -43,10 +43,6 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
 
     protected String apiSpaceId;
 
-    protected IStateListener stateListener;
-
-    protected IProfileListener profileListener;
-
     protected CallbackAdapter callbackAdapter;
 
     protected int logSizeLimit;
@@ -89,24 +85,6 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      */
     PushMessageListener getPushMessageListener() {
         return pushMessageListener;
-    }
-
-    /**
-     * Gets listener for SDK state changes.
-     *
-     * @return Listener for SDK state changes.
-     */
-    protected IStateListener getStateListener() {
-        return stateListener;
-    }
-
-    /**
-     * Gets listener for profile changes.
-     *
-     * @return Listener for profile changes.
-     */
-    protected IProfileListener getProfileListener() {
-        return profileListener;
     }
 
     /**
@@ -186,30 +164,6 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      */
     public T authenticator(ComapiAuthenticator authenticator) {
         this.authenticator = authenticator;
-        return getThis();
-    }
-
-    /**
-     * Sets listener for SDK state changes.
-     *
-     * @param stateListener {@link StateListener} callback for state changes.
-     * @param <E>           Extends {@link StateListener}
-     * @return BaseURIs instance with new value set.
-     */
-    public <E extends StateListener> T stateListener(E stateListener) {
-        this.stateListener = stateListener;
-        return getThis();
-    }
-
-    /**
-     * Sets listener for profile changes.
-     *
-     * @param profileListener {@link ProfileListener} callback for profile changes.
-     * @param <E>             Extends {@link ProfileListener}
-     * @return BaseURIs instance with new value set.
-     */
-    public <E extends ProfileListener> T profileListener(E profileListener) {
-        this.profileListener = profileListener;
         return getThis();
     }
 
