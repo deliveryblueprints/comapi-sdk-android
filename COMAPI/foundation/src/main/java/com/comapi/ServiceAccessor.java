@@ -30,6 +30,7 @@ import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
+import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
 import com.comapi.internal.network.model.messaging.EventsQueryResponse;
 import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
@@ -255,8 +256,20 @@ public class ServiceAccessor {
          * @param from           ID of the event to start from.
          * @param limit          Limit of events to obtain in this call.
          * @param callback       Callback with the result.
+         * @deprecated Use {@link #queryConversationEvents(String, Long, Integer, Callback)} for better visibility of possible events in the response.
          */
+        @Deprecated
         void queryEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit, @Nullable Callback<ComapiResult<EventsQueryResponse>> callback);
+
+        /**
+         * Query conversation events.
+         *
+         * @param conversationId ID of a conversation to query events in it.
+         * @param from           ID of the event to start from.
+         * @param limit          Limit of events to obtain in this call.
+         * @param callback       Callback with the result.
+         */
+        void queryConversationEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit, @Nullable Callback<ComapiResult<ConversationEventsResponse>> callback);
 
         /**
          * Query conversation messages.

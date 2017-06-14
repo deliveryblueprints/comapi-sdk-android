@@ -30,6 +30,7 @@ import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
+import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
 import com.comapi.internal.network.model.messaging.EventsQueryResponse;
 import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
@@ -276,6 +277,19 @@ class ServiceQueue extends ServiceApiWrapper {
                         public Observable<ComapiResult<EventsQueryResponse>> call(String token) {
                             log.d("doQueryEvents called from the service queue. " + queue.size() + " requests still pending.");
                             return doQueryEvents(token, conversationId, from, limit);
+                        }
+                    })
+                    .doOnCompleted(this::executePending);
+        }
+
+        Observable<ComapiResult<ConversationEventsResponse>> queueQueryConversationEvents(String conversationId, Long from, Integer limit) {
+
+            return createNewTask()
+                    .flatMap(new Func1<String, Observable<ComapiResult<ConversationEventsResponse>>>() {
+                        @Override
+                        public Observable<ComapiResult<ConversationEventsResponse>> call(String token) {
+                            log.d("doQueryEvents called from the service queue. " + queue.size() + " requests still pending.");
+                            return doQueryConversationEvents(token, conversationId, from, limit);
                         }
                     })
                     .doOnCompleted(this::executePending);

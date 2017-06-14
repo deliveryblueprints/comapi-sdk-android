@@ -62,6 +62,7 @@ import com.comapi.internal.network.model.events.conversation.message.MessageDeli
 import com.comapi.internal.network.model.events.conversation.message.MessageReadEvent;
 import com.comapi.internal.network.model.events.conversation.message.MessageSentEvent;
 import com.comapi.internal.network.model.messaging.Alert;
+import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
 import com.comapi.internal.network.model.messaging.EventsQueryResponse;
 import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatus;
@@ -799,6 +800,54 @@ public class ServiceCallbackTest {
         assertNotNull(listener.getResult().getResult().getParticipantUpdate().get(0));
 
         assertEquals(9, listener.getResult().getResult().getCombinedSize());
+    }
+
+    @Test
+    public void queryConversationEvents() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_conversation_events_query.json", 200).addHeader("ETag", "eTag"));
+
+        final MockCallback<ComapiResult<ConversationEventsResponse>> listener = new MockCallback<>();
+
+        service.queryConversationEvents("someId", 0L, 100, listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getETag());
+
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getEventId());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getName());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getConversationEventId());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getMessageId());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getConversationId());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getProfileId());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getTimestamp());
+
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getEventId());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getName());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getConversationEventId());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getMessageId());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getConversationId());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getProfileId());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getTimestamp());
+
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getEventId());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getName());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getConversationEventId());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getMessageId());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getAlert().getPlatforms().getFcm().get("notification"));
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getAlert().getPlatforms().getFcm().get("data"));
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getConversationId());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getSentBy());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getSentOn());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getFromWhom().getId());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getFromWhom().getName());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getFromWhom().getName());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getMetadata().get("key"));
     }
 
     @Test

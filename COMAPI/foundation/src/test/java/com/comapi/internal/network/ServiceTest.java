@@ -1003,6 +1003,65 @@ public class ServiceTest {
     }
 
     @Test
+    public void queryConversationEvents() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_conversation_events_query.json", 200).addHeader("ETag", "eTag"));
+
+        service.queryConversationEvents("someId", 0L, 100).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getETag());
+
+            assertNotNull(response.getResult().getMessageRead().get(0).getEventId());
+            assertNotNull(response.getResult().getMessageRead().get(0).getName());
+            assertNotNull(response.getResult().getMessageRead().get(0).getConversationEventId());
+            assertNotNull(response.getResult().getMessageRead().get(0).getMessageId());
+            assertNotNull(response.getResult().getMessageRead().get(0).getConversationId());
+            assertNotNull(response.getResult().getMessageRead().get(0).getProfileId());
+            assertNotNull(response.getResult().getMessageRead().get(0).getTimestamp());
+
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getEventId());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getName());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getConversationEventId());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getMessageId());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getConversationId());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getProfileId());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getTimestamp());
+
+            assertNotNull(response.getResult().getMessageSent().get(0).getEventId());
+            assertNotNull(response.getResult().getMessageSent().get(0).getName());
+            assertNotNull(response.getResult().getMessageSent().get(0).getConversationEventId());
+            assertNotNull(response.getResult().getMessageSent().get(0).getMessageId());
+            assertNotNull(response.getResult().getMessageSent().get(0).getAlert().getPlatforms().getFcm().get("notification"));
+            assertNotNull(response.getResult().getMessageSent().get(0).getAlert().getPlatforms().getFcm().get("data"));
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getConversationId());
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getSentBy());
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getSentOn());
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getFromWhom().getId());
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getFromWhom().getName());
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getFromWhom().getName());
+            assertNotNull(response.getResult().getMessageSent().get(0).getMetadata().get("key"));
+        });
+    }
+
+    @Test
+    public void queryConversationEvents_sessionCreateInProgress() {
+
+        isCreateSessionInProgress.set(true);
+        service.queryConversationEvents("someId", 0L, 100).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        assertEquals(1, service.getTaskQueue().queue.size());
+        isCreateSessionInProgress.set(false);
+        service.getTaskQueue().executePending();
+        assertEquals(0, service.getTaskQueue().queue.size());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void queryConversationEvents_noSession_shouldFail() throws Exception {
+        DataTestHelper.clearSessionData();
+        queryConversationEvents();
+    }
+
+    @Test
     public void queryMessages() throws Exception {
 
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_message_query.json", 200).addHeader("ETag", "eTag"));

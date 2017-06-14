@@ -32,6 +32,7 @@ import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
+import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
 import com.comapi.internal.network.model.messaging.EventsQueryResponse;
 import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
@@ -229,7 +230,7 @@ class ServiceApiWrapper extends ApiWrapper {
     }
 
     /**
-     * Query chanel events.
+     * Query events.  Use {@link #doQueryConversationEvents(String, String, Long, Integer)} for better visibility of possible events.
      *
      * @param token          Comapi access token.
      * @param conversationId ID of a conversation to query events in it.
@@ -240,6 +241,22 @@ class ServiceApiWrapper extends ApiWrapper {
     Observable<ComapiResult<EventsQueryResponse>> doQueryEvents(@NonNull final String token, @NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit) {
         return service.queryEvents(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, from, limit).map(mapToComapiResult()).flatMap(result -> {
             EventsQueryResponse newResult = new EventsQueryResponse(result.getResult(), new Parser());
+            return wrapObservable(Observable.just(new ComapiResult<>(result, newResult)));
+        });
+    }
+
+    /**
+     * Query conversation events.
+     *
+     * @param token          Comapi access token.
+     * @param conversationId ID of a conversation to query events in it.
+     * @param from           ID of the event to start from.
+     * @param limit          Limit of events to obtain in this call.
+     * @return Observable to get events in a conversation.
+     */
+    Observable<ComapiResult<ConversationEventsResponse>> doQueryConversationEvents(@NonNull final String token, @NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit) {
+        return service.queryEvents(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, from, limit).map(mapToComapiResult()).flatMap(result -> {
+            ConversationEventsResponse newResult = new ConversationEventsResponse(result.getResult(), new Parser());
             return wrapObservable(Observable.just(new ComapiResult<>(result, newResult)));
         });
     }

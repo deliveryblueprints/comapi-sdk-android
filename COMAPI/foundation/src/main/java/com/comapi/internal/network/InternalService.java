@@ -48,6 +48,7 @@ import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
+import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
 import com.comapi.internal.network.model.messaging.EventsQueryResponse;
 import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
@@ -658,7 +659,7 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
     }
 
     /**
-     * Query chanel events.
+     * Query events. Use {@link #queryConversationEvents(String, Long, Integer)} for better visibility of possible events.
      *
      * @param conversationId ID of a conversation to query events in it.
      * @param from           ID of the event to start from.
@@ -679,6 +680,27 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
     }
 
     /**
+     * Query conversation events.
+     *
+     * @param conversationId ID of a conversation to query events in it.
+     * @param from           ID of the event to start from.
+     * @param limit          Limit of events to obtain in this call.
+     * @return Observable to get events from a conversation.
+     */
+    public Observable<ComapiResult<ConversationEventsResponse>> queryConversationEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit) {
+
+        final String token = getToken();
+
+        if (sessionController.isCreatingSession()) {
+            return getTaskQueue().queueQueryConversationEvents(conversationId, from, limit);
+        } else if (TextUtils.isEmpty(token)) {
+            return Observable.error(getSessionStateErrorDescription());
+        } else {
+            return doQueryConversationEvents(token, conversationId, from, limit);
+        }
+    }
+
+    /**
      * Query chanel events.
      *
      * @param conversationId ID of a conversation to query events in it.
@@ -688,6 +710,18 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      */
     public void queryEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit, @Nullable Callback<ComapiResult<EventsQueryResponse>> callback) {
         adapter.adapt(queryEvents(conversationId, from, limit), callback);
+    }
+
+    /**
+     * Query chanel events.
+     *
+     * @param conversationId ID of a conversation to query events in it.
+     * @param from           ID of the event to start from.
+     * @param limit          Limit of events to obtain in this call.
+     * @param callback       Callback to deliver new session instance.
+     */
+    public void queryConversationEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit, @Nullable Callback<ComapiResult<ConversationEventsResponse>> callback) {
+        adapter.adapt(queryConversationEvents(conversationId, from, limit), callback);
     }
 
     /**
