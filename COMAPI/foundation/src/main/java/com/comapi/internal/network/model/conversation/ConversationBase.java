@@ -61,18 +61,18 @@ public class ConversationBase {
     }
 
     /**
-     * Get ID of the Conversation.
+     * Get description of the Conversation.
      *
-     * @return ID of the Conversation.
+     * @return Description of the Conversation.
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * Get description of the Conversation.
+     * Get privileges of owner and participants in this conversation.
      *
-     * @return Description of the Conversation.
+     * @return Privileges of owner and participants in this conversation.
      */
     public Roles getRoles() {
         return roles;

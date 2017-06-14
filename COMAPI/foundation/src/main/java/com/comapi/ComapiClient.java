@@ -27,7 +27,7 @@ import android.support.annotation.NonNull;
 import com.comapi.internal.CallbackAdapter;
 
 /**
- * ComapiImpl Client implementation for foundation SDK. Handles initialisation and stores all internal objects.
+ * Comapi Client implementation for foundation SDK. Handles initialisation and stores all internal objects.
  *
  * @author Marcin Swierczek
  * @since 1.0.0
