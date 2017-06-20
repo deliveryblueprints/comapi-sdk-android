@@ -52,7 +52,9 @@ public class MessageToSend extends BaseMessage {
         }
 
         /**
-         * Sets metadata to the message.
+         * Sets metadata map for the message.
+         *
+         * @param metadata Metadata of the message e.g. custom message id.
          */
         public Builder setMetadata(Map<String, Object> metadata) {
             message.metadata = metadata;
@@ -60,7 +62,20 @@ public class MessageToSend extends BaseMessage {
         }
 
         /**
+         * Adds new metadata to the message.
+         *
+         * @param key   Metadata map key.
+         * @param value Metadata value.
+         */
+        public Builder addMetadata(String key, Object value) {
+            message.addMetadata(key, value);
+            return this;
+        }
+
+        /**
          * Adds new part of the message.
+         *
+         * @param part One of the message parts.
          */
         public Builder addPart(Part part) {
             message.parts.add(part);
@@ -69,6 +84,9 @@ public class MessageToSend extends BaseMessage {
 
         /**
          * Sets push alert details.
+         *
+         * @param fcm Describes the FCM push alert that should be displayed on supporting platforms.
+         * @param apns Describes the APNS push alert that should be displayed on supporting platforms.
          */
         public Builder setAlert(Map<String, Object> fcm, Map<String, Object> apns) {
             message.alert = new Alert(fcm, apns);
