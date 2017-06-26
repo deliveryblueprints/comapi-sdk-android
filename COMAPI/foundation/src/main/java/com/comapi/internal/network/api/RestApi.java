@@ -44,6 +44,7 @@ import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Headers;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
@@ -102,6 +103,14 @@ public interface RestApi {
     @Headers({"Accept: application/json"})
     @PUT("/apispaces/{apiSpaceId}/profiles/{id}")
     Observable<Response<Map<String, Object>>> updateProfile(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Path("id") String id, @Body Map<String, Object> profileUpdate);
+
+    @Headers({"Accept: application/json"})
+    @PATCH("/apispaces/{apiSpaceId}/profiles/{id}")
+    Observable<Response<Map<String, Object>>> patchProfile(@Header("Authorization") String authorization, @Header("If-Match") String eTag, @Path("apiSpaceId") String apiSpaceId, @Path("id") String id, @Body Map<String, Object> profileUpdate);
+
+    @Headers({"Accept: application/json"})
+    @PATCH("/apispaces/{apiSpaceId}/profiles/{id}")
+    Observable<Response<Map<String, Object>>> patchProfile(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Path("id") String id, @Body Map<String, Object> profileUpdate);
 
     /*
      * conversations

@@ -153,6 +153,22 @@ public class RxServiceAccessor {
          * @return Observable with to perform update profile for current session.
          */
         Observable<ComapiResult<Map<String, Object>>> updateProfile(@NonNull final Map<String, Object> profileDetails, final String eTag);
+
+        /**
+         * Applies given profile patch if required permission is granted.
+         *
+         * @param profileDetails Profile details.
+         * @return Observable with to perform patch profile for current session.
+         */
+        Observable<ComapiResult<Map<String, Object>>> patchProfile(@NonNull String profileId, @NonNull final Map<String, Object> profileDetails, final String eTag);
+
+        /**
+         * Applies profile patch for an active session.
+         *
+         * @param profileDetails Profile details.
+         * @return Observable with to perform patch profile for current session.
+         */
+        Observable<ComapiResult<Map<String, Object>>> patchMyProfile(@NonNull final Map<String, Object> profileDetails, final String eTag);
     }
 
     /**

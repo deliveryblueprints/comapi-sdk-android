@@ -125,6 +125,17 @@ class ServiceApiWrapper extends ApiWrapper {
     }
 
     /**
+     * Patches profile for an active session.
+     *
+     * @param token          Comapi access token.
+     * @param profileDetails Profile details.
+     * @return Observable with to perform patch profile for current session.
+     */
+    Observable<ComapiResult<Map<String, Object>>> doPatchProfile(@NonNull final String token, @NonNull final String profileId, @NonNull final Map<String, Object> profileDetails, final String eTag) {
+        return wrapObservable(!TextUtils.isEmpty(eTag) ? service.patchProfile(AuthManager.addAuthPrefix(token), eTag, apiSpaceId, profileId, profileDetails).map(mapToComapiResult()) : service.patchProfile(AuthManager.addAuthPrefix(token), apiSpaceId, profileId, profileDetails).map(mapToComapiResult()));
+    }
+
+    /**
      * Returns observable to create a conversation.
      *
      * @param token   Comapi access token.

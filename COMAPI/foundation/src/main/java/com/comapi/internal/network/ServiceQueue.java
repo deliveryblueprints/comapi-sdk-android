@@ -152,6 +152,19 @@ class ServiceQueue extends ServiceApiWrapper {
                     .doOnCompleted(this::executePending);
         }
 
+        Observable<ComapiResult<Map<String, Object>>> queuePatchProfile(Map<String, Object> profileDetails, String eTag) {
+
+            return createNewTask()
+                    .flatMap(new Func1<String, Observable<ComapiResult<Map<String, Object>>>>() {
+                        @Override
+                        public Observable<ComapiResult<Map<String, Object>>> call(String token) {
+                            log.d("doPatchProfile called from the service queue. " + queue.size() + " requests still pending.");
+                            return doPatchProfile(token, dataMgr.getSessionDAO().session().getProfileId(), profileDetails, eTag);
+                        }
+                    })
+                    .doOnCompleted(this::executePending);
+        }
+
         Observable<ComapiResult<ConversationDetails>> queueCreateConversation(ConversationCreate request) {
 
             return createNewTask()

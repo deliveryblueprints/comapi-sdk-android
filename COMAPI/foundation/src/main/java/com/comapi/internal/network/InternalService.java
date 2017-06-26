@@ -326,8 +326,74 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      * @param profileDetails Profile details.
      * @param callback       Callback to deliver new session instance.
      */
+    @Override
     public void updateProfile(@NonNull final Map<String, Object> profileDetails, final String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback) {
         adapter.adapt(updateProfile(profileDetails, eTag), callback);
+    }
+
+    /**
+     * Applies given profile patch if required permission is granted.
+     *
+     * @param profileId      Id of an profile to patch.
+     * @param profileDetails Profile details.
+     * @param eTag           ETag for server to check if local version of the data is the same as the one the server side.
+     * @return Observable with to perform update profile for current session.
+     */
+    @Override
+    public Observable<ComapiResult<Map<String, Object>>> patchProfile(@NonNull final String profileId, @NonNull final Map<String, Object> profileDetails, final String eTag) {
+
+        final String token = getToken();
+
+        if (sessionController.isCreatingSession()) {
+            return getTaskQueue().queuePatchProfile(profileDetails, eTag);
+        } else if (TextUtils.isEmpty(token)) {
+            return Observable.error(getSessionStateErrorDescription());
+        } else {
+            return doPatchProfile(token, dataMgr.getSessionDAO().session().getProfileId(), profileDetails, eTag);
+        }
+    }
+
+    /**
+     * Applies profile patch for an active session.
+     *
+     * @param profileDetails Profile details.
+     * @param eTag           ETag for server to check if local version of the data is the same as the one the server side.
+     * @return Observable with to perform update profile for current session.
+     */
+    @Override
+    public Observable<ComapiResult<Map<String, Object>>> patchMyProfile(@NonNull Map<String, Object> profileDetails, String eTag) {
+
+        final SessionData session = dataMgr.getSessionDAO().session();
+        final String profileId = session != null ? session.getProfileId() : null;
+
+        if (TextUtils.isEmpty(profileId)) {
+            return Observable.error(getSessionStateErrorDescription());
+        } else {
+            return patchProfile(profileId, profileDetails, eTag);
+        }
+    }
+
+    /**
+     * Applies given profile patch if required permission is granted.
+     *
+     * @param profileId      Id of an profile to patch.
+     * @param profileDetails Profile details.
+     * @param callback       Callback with the result.
+     */
+    @Override
+    public void patchProfile(@NonNull final String profileId, @NonNull Map<String, Object> profileDetails, String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback) {
+        adapter.adapt(patchProfile(profileId, profileDetails, eTag), callback);
+    }
+
+    /**
+     * Applies profile patch for an active session.
+     *
+     * @param profileDetails Profile details.
+     * @param callback       Callback with the result.
+     */
+    @Override
+    public void patchMyProfile(@NonNull Map<String, Object> profileDetails, String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback) {
+        adapter.adapt(patchMyProfile(profileDetails, eTag), callback);
     }
 
     /**

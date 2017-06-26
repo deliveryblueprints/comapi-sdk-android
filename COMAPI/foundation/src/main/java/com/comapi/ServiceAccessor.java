@@ -142,6 +142,23 @@ public class ServiceAccessor {
          * @param callback       Callback with the result.
          */
         void updateProfile(@NonNull final Map<String, Object> profileDetails, final String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback);
+
+        /**
+         * Applies given profile patch if required permission is granted.
+         *
+         * @param profileId      Id of an profile to patch.
+         * @param profileDetails Profile details.
+         * @param callback       Callback with the result.
+         */
+        void patchProfile(@NonNull final String profileId, @NonNull final Map<String, Object> profileDetails, final String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback);
+
+        /**
+         * Applies profile patch for an active session.
+         *
+         * @param profileDetails Profile details.
+         * @param callback       Callback with the result.
+         */
+        void patchMyProfile(@NonNull final Map<String, Object> profileDetails, final String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback);
     }
 
     /**

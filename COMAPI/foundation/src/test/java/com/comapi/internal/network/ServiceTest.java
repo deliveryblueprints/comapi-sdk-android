@@ -489,6 +489,63 @@ public class ServiceTest {
     }
 
     @Test
+    public void patchProfile() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        service.patchMyProfile(map, "eTag").toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getResult().get("id"));
+            assertNotNull(response.getETag());
+        });
+    }
+
+    @Test
+    public void patchProfile2() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        service.patchProfile("someId", map, null).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getResult().get("id"));
+            assertNotNull(response.getETag());
+        });
+    }
+
+    @Test
+    public void patchProfile_sessionCreateInProgress() throws Exception {
+        isCreateSessionInProgress.set(true);
+        service.patchMyProfile(new HashMap<>(), null).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        assertEquals(1, service.getTaskQueue().queue.size());
+        isCreateSessionInProgress.set(false);
+        service.getTaskQueue().executePending();
+        assertEquals(0, service.getTaskQueue().queue.size());
+    }
+
+    @Test(expected = ComapiException.class)
+    public void patchProfile_sessionCreateInProgress_noToken() throws Exception {
+        DataTestHelper.clearSessionData();
+        isCreateSessionInProgress.set(false);
+        service.patchMyProfile(new HashMap<>(), null).timeout(3, TimeUnit.SECONDS).toBlocking().subscribe();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void patchProfile_noSession_shouldFail() throws Exception {
+        DataTestHelper.clearSessionData();
+        patchProfile();
+    }
+
+    @Test
     public void isTyping() {
         server.enqueue(new MockResponse().setResponseCode(200));
         service.isTyping("conversationId").toBlocking().forEach(response -> {
