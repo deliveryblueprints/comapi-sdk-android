@@ -52,6 +52,9 @@ public class ProfileUpdateEvent extends Event {
     @SerializedName("apiSpaceId")
     protected String apiSpaceId;
 
+    @SerializedName("etag")
+    protected String eTag;
+
     /**
      * Gets id for a Comapi user profile that was updated.
      *
@@ -104,6 +107,15 @@ public class ProfileUpdateEvent extends Event {
      */
     public String getApiSpaceId() {
         return apiSpaceId;
+    }
+
+    /**
+     * Gets tag specifying server data version.
+     *
+     * @return Tag specifying server data version.
+     */
+    public String getETag() {
+        return eTag;
     }
 
     private class ProfileContext {

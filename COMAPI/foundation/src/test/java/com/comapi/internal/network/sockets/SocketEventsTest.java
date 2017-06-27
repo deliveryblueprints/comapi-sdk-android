@@ -357,6 +357,7 @@ public class SocketEventsTest {
         assertEquals(true, receiver.conversationUpdate.getName().equals(ConversationUpdateEvent.TYPE));
         assertNotNull(receiver.conversationUpdate.getConversationId());
         assertEquals("myConversationDescription", receiver.conversationUpdate.getDescription());
+        assertEquals("\"33-EFUJLArhd3ar+j1D4/TR3JfNcvE\"", receiver.conversationUpdate.getETag());
         assertTrue(receiver.conversationUpdate.getRoles().getOwner().getCanAddParticipants());
         assertTrue(receiver.conversationUpdate.getRoles().getOwner().getCanSend());
         assertTrue(receiver.conversationUpdate.getRoles().getOwner().getCanRemoveParticipants());
@@ -373,6 +374,7 @@ public class SocketEventsTest {
         dispatcher.onMessage(json);
         assertNotNull(receiver.conversationDelete.getEventId());
         assertEquals(true, receiver.conversationDelete.getName().equals(ConversationDeleteEvent.TYPE));
+        assertEquals("\"33-EFUJLArhd3ar+j1D4/TR3JfNcvE\"", receiver.conversationDelete.getETag());
         assertNotNull(receiver.conversationDelete.getDeletedOn());
         assertNotNull(receiver.conversationDelete.toString());
     }
@@ -384,6 +386,7 @@ public class SocketEventsTest {
         dispatcher.onMessage(json);
         assertNotNull(receiver.conversationUndelete.getEventId());
         assertEquals(true, receiver.conversationUndelete.getName().equals(ConversationUndeleteEvent.TYPE));
+        assertEquals("\"33-EFUJLArhd3ar+j1D4/TR3JfNcvE\"", receiver.conversationUndelete.getETag());
         assertNotNull(receiver.conversationUndelete.getConversation().getId());
         assertNotNull(receiver.conversationUndelete.getConversation().getDescription());
         assertNotNull(receiver.conversationUndelete.getName());
@@ -409,6 +412,7 @@ public class SocketEventsTest {
         assertEquals("Doe", receiver.profileUpdate.getPayload().get("surname"));
         assertEquals("0", ((Map<String, String>) receiver.profileUpdate.getPayload().get("address")).get("number"));
         assertEquals("postcode", ((Map<String, String>) receiver.profileUpdate.getPayload().get("address")).get("postcode"));
+        assertEquals("\"33-EFUJLArhd3ar+j1D4/TR3JfNcvE\"", receiver.profileUpdate.getETag());
     }
 
     @Test

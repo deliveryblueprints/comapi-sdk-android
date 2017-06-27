@@ -35,6 +35,9 @@ class ConversationEvent extends Event {
     @SerializedName("conversationId")
     protected String conversationId;
 
+    @SerializedName("etag")
+    protected String eTag;
+
     /**
      * Gets conversation unique identifier.
      *
@@ -42,6 +45,15 @@ class ConversationEvent extends Event {
      */
     public String getConversationId() {
         return conversationId;
+    }
+
+    /**
+     * Gets tag specifying server data version.
+     *
+     * @return Tag specifying server data version.
+     */
+    public String getETag() {
+        return eTag;
     }
 
     @Override
