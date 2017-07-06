@@ -30,6 +30,9 @@ import com.google.gson.annotations.SerializedName;
  */
 public class ConversationBase {
 
+    @SerializedName("isPublic")
+    protected Boolean isPublic;
+
     @SerializedName("id")
     protected String id;
 
@@ -41,6 +44,15 @@ public class ConversationBase {
 
     @SerializedName("roles")
     protected Roles roles;
+
+    /**
+     * Check if the Conversation is public.
+     *
+     * @return True if Conversation is publicly accessible.
+     */
+    public Boolean isPublic() {
+        return isPublic;
+    }
 
     /**
      * Get ID of the Conversation.

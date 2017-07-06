@@ -20,8 +20,6 @@
 
 package com.comapi.internal.network.model.conversation;
 
-import com.google.gson.annotations.SerializedName;
-
 /**
  * Details of a conversation.
  *
@@ -30,15 +28,4 @@ import com.google.gson.annotations.SerializedName;
  */
 public class ConversationDetails extends ConversationBase {
 
-    @SerializedName("isPublic")
-    protected Boolean isPublic;
-
-    /**
-     * Check if the Conversation is public.
-     *
-     * @return True if Conversation is publicly accessible.
-     */
-    public Boolean isPublic() {
-        return isPublic;
-    }
 }
