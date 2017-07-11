@@ -31,6 +31,7 @@ import com.comapi.GlobalState;
 import com.comapi.QueryBuilder;
 import com.comapi.StateListener;
 import com.comapi.helpers.DataTestHelper;
+import com.comapi.helpers.MockCallback;
 import com.comapi.helpers.ResponseTestHelper;
 import com.comapi.internal.CallbackAdapter;
 import com.comapi.internal.ComapiException;
@@ -40,6 +41,7 @@ import com.comapi.internal.log.LogLevel;
 import com.comapi.internal.log.LogManager;
 import com.comapi.internal.log.Logger;
 import com.comapi.internal.network.api.RestApi;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
 import com.comapi.internal.network.model.events.ProfileUpdateEvent;
@@ -693,6 +695,37 @@ public class ServiceTest {
         service.getConversations(Scope.PARTICIPANT).toBlocking().forEach(response -> {
             assertEquals(true, response.isSuccessful());
             assertEquals(200, response.getCode());
+            assertNotNull(response.getResult().get(0).getDescription());
+            assertNotNull(response.getResult().get(0).getId());
+            assertNotNull(response.getResult().get(0).getName());
+            assertNotNull(response.getResult().get(0).getRoles().getOwner());
+            assertNotNull(response.getResult().get(0).getRoles().getParticipant());
+            assertEquals(true, response.getResult().get(0).getRoles().getParticipant().getCanAddParticipants().booleanValue());
+            assertEquals(true, response.getResult().get(0).getRoles().getParticipant().getCanRemoveParticipants().booleanValue());
+            assertEquals(true, response.getResult().get(0).getRoles().getParticipant().getCanSend().booleanValue());
+            assertEquals(true, response.getResult().get(0).getRoles().getOwner().getCanAddParticipants().booleanValue());
+            assertEquals(true, response.getResult().get(0).getRoles().getOwner().getCanRemoveParticipants().booleanValue());
+            assertEquals(true, response.getResult().get(0).getRoles().getOwner().getCanSend().booleanValue());
+            assertNotNull(response.getETag());
+        });
+    }
+
+    @Test
+    public void getConversationsExtended() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_conversations_get_ext.json", 200).addHeader("ETag", "eTag"));
+
+        service.getConversations(false).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+
+            assertEquals("eTag", response.getResult().get(0).getETag());
+            assertEquals("eTag", response.getResult().get(1).getETag());
+            assertEquals(Long.valueOf(24), response.getResult().get(0).getLatestSentEventId());
+            assertNull(response.getResult().get(1).getLatestSentEventId());
+            assertEquals(Integer.valueOf(2), response.getResult().get(0).getParticipantCount());
+            assertEquals(Integer.valueOf(1), response.getResult().get(1).getParticipantCount());
+
             assertNotNull(response.getResult().get(0).getDescription());
             assertNotNull(response.getResult().get(0).getId());
             assertNotNull(response.getResult().get(0).getName());

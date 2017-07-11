@@ -28,6 +28,7 @@ import com.comapi.internal.network.InternalService;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
 import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
@@ -210,8 +211,18 @@ public class RxServiceAccessor {
          *
          * @param scope {@link Scope} of the query
          * @return Observable to to create a conversation.
+         * @deprecated Please use {@link MessagingService#getConversations(boolean)} instead.
          */
+        @Deprecated
         Observable<ComapiResult<List<ConversationDetails>>> getConversations(@NonNull final Scope scope);
+
+        /**
+         * Returns observable to get all visible conversations.
+         *
+         * @param isPublic Has the conversation public or private access.
+         * @return Observable to to create a conversation.
+         */
+        Observable<ComapiResult<List<Conversation>>> getConversations(final boolean isPublic);
 
         /**
          * Returns observable to update a conversation.

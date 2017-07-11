@@ -28,6 +28,7 @@ import com.comapi.internal.log.Logger;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
 import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
@@ -37,6 +38,7 @@ import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.MessagesQueryResponse;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -210,6 +212,26 @@ class ServiceQueue extends ServiceApiWrapper {
                     .flatMap(new Func1<String, Observable<ComapiResult<List<ConversationDetails>>>>() {
                         @Override
                         public Observable<ComapiResult<List<ConversationDetails>>> call(String token) {
+                            log.d("doGetConversations called from the service queue. " + queue.size() + " requests still pending.");
+                            return doGetConversations(token, dataMgr.getSessionDAO().session().getProfileId(), scope).map(result -> {
+                                List<ConversationDetails> newList = new ArrayList<>();
+                                List<Conversation> oldList = result.getResult();
+                                if (oldList != null && !oldList.isEmpty()) {
+                                    newList.addAll(oldList);
+                                }
+                                return new ComapiResult<>(result, newList);
+                            });
+                        }
+                    })
+                    .doOnCompleted(this::executePending);
+        }
+
+        Observable<ComapiResult<List<Conversation>>> queueGetConversationsExt(Scope scope) {
+
+            return createNewTask()
+                    .flatMap(new Func1<String, Observable<ComapiResult<List<Conversation>>>>() {
+                        @Override
+                        public Observable<ComapiResult<List<Conversation>>> call(String token) {
                             log.d("doGetConversations called from the service queue. " + queue.size() + " requests still pending.");
                             return doGetConversations(token, dataMgr.getSessionDAO().session().getProfileId(), scope);
                         }

@@ -23,6 +23,7 @@ package com.comapi.internal.network.api;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
 import com.comapi.internal.network.model.session.PushConfig;
 import com.comapi.internal.network.model.session.SessionStartResponse;
@@ -134,7 +135,7 @@ public interface RestApi {
 
     @Headers({"Accept: application/json"})
     @GET("/apispaces/{apiSpaceId}/conversations")
-    Observable<Response<List<ConversationDetails>>> getConversations(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Query("scope") String scope, @Query("profileId") String profileId);
+    Observable<Response<List<Conversation>>> getConversations(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Query("scope") String scope, @Query("profileId") String profileId);
 
     @Headers({"Accept: application/json"})
     @PUT("/apispaces/{apiSpaceId}/conversations/{conversationId}")

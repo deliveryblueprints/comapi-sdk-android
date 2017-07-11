@@ -30,6 +30,7 @@ import com.comapi.internal.network.api.RestApi;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
 import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
@@ -176,7 +177,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @param scope {@link Scope} of the query
      * @return Observable to to create a conversation.
      */
-    Observable<ComapiResult<List<ConversationDetails>>> doGetConversations(@NonNull final String token, @NonNull final String profileId, @NonNull final Scope scope) {
+    Observable<ComapiResult<List<Conversation>>> doGetConversations(@NonNull final String token, @NonNull final String profileId, @NonNull final Scope scope) {
         return wrapObservable(service.getConversations(AuthManager.addAuthPrefix(token), apiSpaceId, scope.getValue(), profileId).map(mapToComapiResult()));
     }
 

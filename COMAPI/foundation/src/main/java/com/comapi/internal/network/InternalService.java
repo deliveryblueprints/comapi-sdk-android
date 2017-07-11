@@ -43,6 +43,7 @@ import com.comapi.internal.log.Logger;
 import com.comapi.internal.network.api.ComapiService;
 import com.comapi.internal.network.api.RestApi;
 import com.comapi.internal.network.api.RxComapiService;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
@@ -59,6 +60,7 @@ import com.comapi.internal.network.sockets.SocketController;
 import com.comapi.internal.network.sockets.SocketEventListener;
 import com.comapi.internal.push.PushManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -490,7 +492,9 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      *
      * @param scope {@link Scope} of the query
      * @return Observable to to create a conversation.
+     * @deprecated Please use {@link InternalService#getConversations(boolean)} instead.
      */
+    @Deprecated
     public Observable<ComapiResult<List<ConversationDetails>>> getConversations(@NonNull final Scope scope) {
 
         final String token = getToken();
@@ -500,8 +504,44 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
         } else if (TextUtils.isEmpty(token)) {
             return Observable.error(getSessionStateErrorDescription());
         } else {
-            return doGetConversations(token, dataMgr.getSessionDAO().session().getProfileId(), scope);
+            return doGetConversations(token, dataMgr.getSessionDAO().session().getProfileId(), scope).map(result -> {
+                List<ConversationDetails> newList = new ArrayList<>();
+                List<Conversation> oldList = result.getResult();
+                if (oldList != null && !oldList.isEmpty()) {
+                    newList.addAll(oldList);
+                }
+                return new ComapiResult<>(result, newList);
+            });
         }
+    }
+
+    /**
+     * Returns observable to get all visible conversations.
+     *
+     * @param isPublic Has the conversation public or private access.
+     * @return Observable to to create a conversation.
+     */
+    public Observable<ComapiResult<List<Conversation>>> getConversations(final boolean isPublic) {
+
+        final String token = getToken();
+
+        if (sessionController.isCreatingSession()) {
+            return getTaskQueue().queueGetConversationsExt(isPublic ? Scope.PUBLIC : Scope.PARTICIPANT);
+        } else if (TextUtils.isEmpty(token)) {
+            return Observable.error(getSessionStateErrorDescription());
+        } else {
+            return doGetConversations(token, dataMgr.getSessionDAO().session().getProfileId(), isPublic ? Scope.PUBLIC : Scope.PARTICIPANT);
+        }
+    }
+
+    /**
+     * Returns observable to get all visible conversations.
+     *
+     * @param isPublic Has the conversation public or private access.
+     * @param callback       Callback to deliver new session instance.
+    */
+    public void getConversations(final boolean isPublic, @Nullable Callback<ComapiResult<List<Conversation>>> callback) {
+        adapter.adapt(getConversations(isPublic), callback);
     }
 
     /**
@@ -509,7 +549,9 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      *
      * @param scope    {@link Scope} of the query
      * @param callback Callback to deliver new session instance.
+     * @deprecated Please use {@link InternalService#getConversations(boolean, Callback)} instead.
      */
+    @Deprecated
     public void getConversations(@NonNull final Scope scope, @Nullable Callback<ComapiResult<List<ConversationDetails>>> callback) {
         adapter.adapt(getConversations(scope), callback);
     }

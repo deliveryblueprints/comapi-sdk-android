@@ -28,6 +28,7 @@ import com.comapi.internal.network.InternalService;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
 import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
@@ -200,8 +201,18 @@ public class ServiceAccessor {
          *
          * @param scope    {@link Scope} of the query
          * @param callback Callback with the result.
+         * @deprecated Please use {@link MessagingService#getConversations(boolean, Callback)} instead.
          */
+        @Deprecated
         void getConversations(@NonNull final Scope scope, @Nullable Callback<ComapiResult<List<ConversationDetails>>> callback);
+
+        /**
+         * Returns observable to get all visible conversations.
+         *
+         * @param isPublic Has the conversation public or private access.
+         * @param callback Callback with the result.
+         */
+        void getConversations(final boolean isPublic, @Nullable Callback<ComapiResult<List<Conversation>>> callback);
 
         /**
          * Returns observable to update a conversation.

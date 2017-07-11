@@ -45,6 +45,7 @@ import com.comapi.internal.log.LogLevel;
 import com.comapi.internal.log.LogManager;
 import com.comapi.internal.log.Logger;
 import com.comapi.internal.network.api.RestApi;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
@@ -528,6 +529,43 @@ public class ServiceCallbackTest {
 
         assertEquals(true, listener.getResult().isSuccessful());
         assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getResult().get(0).getDescription());
+        assertNotNull(listener.getResult().getResult().get(0).getId());
+        assertNotNull(listener.getResult().getResult().get(0).getName());
+        assertNotNull(listener.getResult().getResult().get(0).getRoles().getOwner());
+        assertNotNull(listener.getResult().getResult().get(0).getRoles().getParticipant());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getParticipant().getCanAddParticipants().booleanValue());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getParticipant().getCanRemoveParticipants().booleanValue());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getParticipant().getCanSend().booleanValue());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getOwner().getCanAddParticipants().booleanValue());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getOwner().getCanRemoveParticipants().booleanValue());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getOwner().getCanSend().booleanValue());
+        assertNotNull(listener.getResult().getETag());
+    }
+
+    @Test
+    public void getConversationsExtended() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_conversations_get_ext.json", 200).addHeader("ETag", "eTag"));
+
+        final MockCallback<ComapiResult<List<Conversation>>> listener = new MockCallback<>();
+
+        service.getConversations(false, listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+
+        assertEquals("eTag", listener.getResult().getResult().get(0).getETag());
+        assertEquals("eTag", listener.getResult().getResult().get(1).getETag());
+        assertEquals(Long.valueOf(24), listener.getResult().getResult().get(0).getLatestSentEventId());
+        assertNull(listener.getResult().getResult().get(1).getLatestSentEventId());
+        assertEquals(Integer.valueOf(2), listener.getResult().getResult().get(0).getParticipantCount());
+        assertEquals(Integer.valueOf(1), listener.getResult().getResult().get(1).getParticipantCount());
+
         assertNotNull(listener.getResult().getResult().get(0).getDescription());
         assertNotNull(listener.getResult().getResult().get(0).getId());
         assertNotNull(listener.getResult().getResult().get(0).getName());
