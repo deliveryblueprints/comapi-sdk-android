@@ -735,6 +735,7 @@ public class ServiceCallbackTest {
         assertEquals(200, listener.getResult().getCode());
         assertNotNull(listener.getResult().getETag());
         assertNotNull(listener.getResult().getResult().getId());
+        assertNotNull(listener.getResult().getResult().getEventId());
     }
 
     @Test
@@ -754,6 +755,7 @@ public class ServiceCallbackTest {
         assertEquals(200, listener.getResult().getCode());
         assertNotNull(listener.getResult().getETag());
         assertNotNull(listener.getResult().getResult().getId());
+        assertNotNull(listener.getResult().getResult().getEventId());
     }
 
     @Test

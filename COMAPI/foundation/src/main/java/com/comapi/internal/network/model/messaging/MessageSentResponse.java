@@ -33,7 +33,14 @@ public class MessageSentResponse {
     @SerializedName("id")
     private String id;
 
+    @SerializedName("eventId")
+    private Long eventId;
+
     public String getId() {
         return id;
+    }
+
+    public Long getEventId() {
+        return eventId;
     }
 }

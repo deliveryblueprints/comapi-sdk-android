@@ -955,6 +955,7 @@ public class ServiceTest {
             assertEquals(200, response.getCode());
             assertNotNull(response.getETag());
             assertNotNull(response.getResult().getId());
+            assertNotNull(response.getResult().getEventId());
         });
     }
 
@@ -968,6 +969,7 @@ public class ServiceTest {
             assertEquals(200, response.getCode());
             assertNotNull(response.getETag());
             assertNotNull(response.getResult().getId());
+            assertNotNull(response.getResult().getEventId());
         });
     }
 
