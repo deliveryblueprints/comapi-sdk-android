@@ -31,7 +31,6 @@ import com.comapi.GlobalState;
 import com.comapi.QueryBuilder;
 import com.comapi.StateListener;
 import com.comapi.helpers.DataTestHelper;
-import com.comapi.helpers.MockCallback;
 import com.comapi.helpers.ResponseTestHelper;
 import com.comapi.internal.CallbackAdapter;
 import com.comapi.internal.ComapiException;
@@ -41,7 +40,6 @@ import com.comapi.internal.log.LogLevel;
 import com.comapi.internal.log.LogManager;
 import com.comapi.internal.log.Logger;
 import com.comapi.internal.network.api.RestApi;
-import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
 import com.comapi.internal.network.model.events.ProfileUpdateEvent;
@@ -163,7 +161,7 @@ public class ServiceTest {
         restApi = service.initialiseRestClient(LogLevel.DEBUG.getValue(), baseURIs);
 
         isCreateSessionInProgress = new AtomicBoolean();
-        sessionController = service.initialiseSessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), new StateListener() {
+        sessionController = service.initialiseSessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), true, new StateListener() {
         });
         sessionController.setSocketController(new SocketController(dataMgr, new SocketEventListener() {
             @Override
@@ -317,7 +315,7 @@ public class ServiceTest {
     @Test
     public void getProfile_unauthorised_retry3times_shouldFail() throws Exception {
 
-        sessionController = new SessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, new StateListener() {
+        sessionController = new SessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, true, new StateListener() {
         }) {
             @Override
             protected Observable<SessionData> reAuthenticate() {
@@ -534,6 +532,16 @@ public class ServiceTest {
         assertEquals(0, service.getTaskQueue().queue.size());
     }
 
+    @Test
+    public void patchProfile2_sessionCreateInProgress() throws Exception {
+        isCreateSessionInProgress.set(true);
+        service.patchProfile("someId", new HashMap<>(), null).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        assertEquals(1, service.getTaskQueue().queue.size());
+        isCreateSessionInProgress.set(false);
+        service.getTaskQueue().executePending();
+        assertEquals(0, service.getTaskQueue().queue.size());
+    }
+
     @Test(expected = ComapiException.class)
     public void patchProfile_sessionCreateInProgress_noToken() throws Exception {
         DataTestHelper.clearSessionData();
@@ -541,10 +549,23 @@ public class ServiceTest {
         service.patchMyProfile(new HashMap<>(), null).timeout(3, TimeUnit.SECONDS).toBlocking().subscribe();
     }
 
+    @Test(expected = ComapiException.class)
+    public void patchProfile2_sessionCreateInProgress_noToken() throws Exception {
+        DataTestHelper.clearSessionData();
+        isCreateSessionInProgress.set(false);
+        service.patchProfile("someId", new HashMap<>(), null).timeout(3, TimeUnit.SECONDS).toBlocking().subscribe();
+    }
+
     @Test(expected = RuntimeException.class)
     public void patchProfile_noSession_shouldFail() throws Exception {
         DataTestHelper.clearSessionData();
         patchProfile();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void patchProfile2_noSession_shouldFail() throws Exception {
+        DataTestHelper.clearSessionData();
+        patchProfile2();
     }
 
     @Test
@@ -711,6 +732,22 @@ public class ServiceTest {
     }
 
     @Test
+    public void getConversations_sessionCreateInProgress() throws Exception {
+        isCreateSessionInProgress.set(true);
+        service.getConversations(Scope.PARTICIPANT).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        assertEquals(1, service.getTaskQueue().queue.size());
+        isCreateSessionInProgress.set(false);
+        service.getTaskQueue().executePending();
+        assertEquals(0, service.getTaskQueue().queue.size());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void getConversations_noSession_shouldFail() throws Exception {
+        DataTestHelper.clearSessionData();
+        getConversations();
+    }
+
+    @Test
     public void getConversationsExtended() throws Exception {
 
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_conversations_get_ext.json", 200).addHeader("ETag", "eTag"));
@@ -742,9 +779,9 @@ public class ServiceTest {
     }
 
     @Test
-    public void getConversations_sessionCreateInProgress() throws Exception {
+    public void getConversationsExtended_sessionCreateInProgress() throws Exception {
         isCreateSessionInProgress.set(true);
-        service.getConversations(Scope.PARTICIPANT).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        service.getConversations(true).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
         assertEquals(1, service.getTaskQueue().queue.size());
         isCreateSessionInProgress.set(false);
         service.getTaskQueue().executePending();
@@ -752,9 +789,9 @@ public class ServiceTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void getConversations_noSession_shouldFail() throws Exception {
+    public void getConversationsExtended_noSession_shouldFail() throws Exception {
         DataTestHelper.clearSessionData();
-        getConversations();
+        getConversationsExtended();
     }
 
     @Test

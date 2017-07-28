@@ -51,6 +51,8 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
 
     private PushTokenProvider pushTokenProvider;
 
+    protected boolean fcmEnabled = true;
+
     /**
      * Gets Comapi ApiSpace identifier.
      *
@@ -121,6 +123,15 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      */
     PushTokenProvider getPushTokenProvider() {
         return pushTokenProvider;
+    }
+
+    /**
+     * Is Firebase Cloud Messaging configuraed and initialised. If yes the SDK will register FCM token on the server.
+     *
+     * @return True if Firebase Cloud Messaging is configured and initialised
+     */
+    boolean isFcmEnabled() {
+        return fcmEnabled;
     }
 
     /**
@@ -197,6 +208,16 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      */
     T pushTokenProvider(PushTokenProvider pushTokenProvider) {
         this.pushTokenProvider = pushTokenProvider;
+        return getThis();
+    }
+
+    /**
+     * Sets if Firebase Cloud Messaging is configured and initialised. If yes the SDK will register FCM token on the server.
+     *
+     * @param fcmEnabled True if Firebase Cloud Messaging is configured and initialised
+     */
+    public T fcmEnabled(boolean fcmEnabled) {
+        this.fcmEnabled = fcmEnabled;
         return getThis();
     }
 

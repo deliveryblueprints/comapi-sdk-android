@@ -204,7 +204,7 @@ public class ServiceCallbackTest {
         restApi = service.initialiseRestClient(LogLevel.DEBUG.getValue(), baseURIs);
 
         isCreateSessionInProgress = new AtomicBoolean();
-        sessionController = service.initialiseSessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), new StateListener() {
+        sessionController = service.initialiseSessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), true, new StateListener() {
         });
         sessionController.setSocketController(new SocketController(dataMgr, new SocketEventListener() {
             @Override
@@ -347,7 +347,7 @@ public class ServiceCallbackTest {
     @Test
     public void getProfile_unauthorised_retry3times_shouldFail() throws Exception {
 
-        sessionController = new SessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, new StateListener() {
+        sessionController = new SessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, true, new StateListener() {
         }) {
             @Override
             protected Observable<SessionData> reAuthenticate() {
@@ -441,6 +441,52 @@ public class ServiceCallbackTest {
 
         //TODO NOT WORKING ETAG null
         service.updateProfile(map, "eTag", listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getResult().get("id"));
+        assertNotNull(listener.getResult().getETag());
+    }
+
+    @Test
+    public void patchProfile() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        final MockCallback<ComapiResult<Map<String, Object>>> listener = new MockCallback<>();
+
+        service.patchMyProfile(map, "eTag", listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getResult().get("id"));
+        assertNotNull(listener.getResult().getETag());
+    }
+
+    @Test
+    public void patchProfile2() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        final MockCallback<ComapiResult<Map<String, Object>>> listener = new MockCallback<>();
+
+        service.patchProfile("someId", map, null, listener);
 
         synchronized (listener) {
             listener.wait(TIME_OUT);

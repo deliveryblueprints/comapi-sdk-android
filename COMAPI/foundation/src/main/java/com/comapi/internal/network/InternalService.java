@@ -143,11 +143,18 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      * @param auth                 ComapiImplementation calls authentication request callback
      * @param restApi              Rest API definitions.
      * @param handler              Main thread handler.
+     * @param fcmEnabled           True if Firebase initialised and configured.
      * @param sessionListener      Listener for new sessions.
      * @return Controller for creating and managing session.
      */
-    public SessionController initialiseSessionController(Application application, @NonNull SessionCreateManager sessionCreateManager, PushManager pushMgr, @NonNull AtomicInteger state, @NonNull ComapiAuthenticator auth, @NonNull RestApi restApi, Handler handler, @NonNull final ISessionListener sessionListener) {
-        sessionController = new SessionController(application, sessionCreateManager, pushMgr, state, dataMgr, auth, restApi, packageName, handler, log, getTaskQueue(), sessionListener);
+    public SessionController initialiseSessionController(Application application,
+                                                         @NonNull SessionCreateManager sessionCreateManager, PushManager pushMgr,
+                                                         @NonNull AtomicInteger state, @NonNull ComapiAuthenticator auth,
+                                                         @NonNull RestApi restApi,
+                                                         @NonNull Handler handler,
+                                                         boolean fcmEnabled, @NonNull
+                                                         final ISessionListener sessionListener) {
+        sessionController = new SessionController(application, sessionCreateManager, pushMgr, state, dataMgr, auth, restApi, packageName, handler, log, getTaskQueue(), fcmEnabled, sessionListener);
         return sessionController;
     }
 
@@ -538,8 +545,8 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      * Returns observable to get all visible conversations.
      *
      * @param isPublic Has the conversation public or private access.
-     * @param callback       Callback to deliver new session instance.
-    */
+     * @param callback Callback to deliver new session instance.
+     */
     public void getConversations(final boolean isPublic, @Nullable Callback<ComapiResult<List<Conversation>>> callback) {
         adapter.adapt(getConversations(isPublic), callback);
     }

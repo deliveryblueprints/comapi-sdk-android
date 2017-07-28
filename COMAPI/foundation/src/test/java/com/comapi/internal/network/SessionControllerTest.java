@@ -110,7 +110,7 @@ public class SessionControllerTest {
         LogManager logMgr = new LogManager();
         logMgr.init(RuntimeEnvironment.application, LogLevel.DEBUG.getValue(), LogLevel.OFF.getValue(), LIMIT);
         dataMgr = new DataManager();
-        dataMgr.init(RuntimeEnvironment.application, API_SPACE_ID,new Logger(new LogManager(), ""));
+        dataMgr.init(RuntimeEnvironment.application, API_SPACE_ID, new Logger(new LogManager(), ""));
         AuthManager authManager = new AuthManager() {
             @Override
             protected Observable<SessionData> restartSession() {
@@ -134,7 +134,7 @@ public class SessionControllerTest {
         sessionMockState = new AtomicInteger(GlobalState.INITIALISED);
         isSessionCreating = new AtomicBoolean();
         ServiceQueue queue = new ServiceQueue(application, "api_space", dataMgr, log);
-        sessionController = new SessionController(application, new SessionCreateManager(isSessionCreating), pushMgr, sessionMockState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), log, queue.getTaskQueue(), new StateListener() {
+        sessionController = new SessionController(application, new SessionCreateManager(isSessionCreating), pushMgr, sessionMockState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), log, queue.getTaskQueue(), true, new StateListener() {
         });
         sessionController.setSocketController(new SocketController(dataMgr, null, new Logger(new LogManager(), ""), new URI("ws://host"), null));
     }
@@ -219,7 +219,7 @@ public class SessionControllerTest {
     @Test
     public void reAuthenticate_automatically() throws Throwable {
 
-        SessionController sessionController = new SessionController(application, new SessionCreateManager(new AtomicBoolean()), pushMgr, new AtomicInteger(), dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, new StateListener() {
+        SessionController sessionController = new SessionController(application, new SessionCreateManager(new AtomicBoolean()), pushMgr, new AtomicInteger(), dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, false, new StateListener() {
         }) {
             @Override
             protected Observable<SessionData> reAuthenticate() {

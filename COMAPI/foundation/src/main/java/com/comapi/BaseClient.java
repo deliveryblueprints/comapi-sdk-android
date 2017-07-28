@@ -116,8 +116,8 @@ public abstract class BaseClient<T> implements IClient<T> {
      * Initialise ComapiImpl client instance.
      *
      * @param application Application context.
-     * @param instance Client instance.
-     * @param adapter Observables to callbacks adapter.
+     * @param instance    Client instance.
+     * @param adapter     Observables to callbacks adapter.
      * @return Observable returning client instance.
      */
     <E extends BaseClient> Observable<E> initialise(@NonNull final Application application, @NonNull final E instance, @NonNull final CallbackAdapter adapter) {
@@ -138,7 +138,7 @@ public abstract class BaseClient<T> implements IClient<T> {
                         }
                     })
                     .flatMap(session -> {
-                        if (state.get() == GlobalState.SESSION_ACTIVE) {
+                        if (state.get() == GlobalState.SESSION_ACTIVE && config.isFcmEnabled()) {
                             return instance.service.updatePushToken()
                                     .doOnNext(sessionComapiResultPair -> log.d("Push token updated"))
                                     .doOnError(throwable -> log.f("Error updating push token", throwable))
@@ -150,12 +150,12 @@ public abstract class BaseClient<T> implements IClient<T> {
                                         }
                                     });
                         }
-                        return Observable.just(session);
+                        return Observable.fromCallable(() -> session);
                     })
                     .map(result -> instance);
 
         } else if (state.get() >= GlobalState.INITIALISED) {
-            return Observable.just(instance);
+            return Observable.fromCallable(() -> instance);
         } else {
             return Observable.error(new ComapiException("Initialise in progress. Shouldn't be called twice. Ignoring."));
         }
@@ -165,7 +165,7 @@ public abstract class BaseClient<T> implements IClient<T> {
      * Performs basic initialisation.
      *
      * @param application Application application.
-     * @param adapter Observables to callbacks adapter.
+     * @param adapter     Observables to callbacks adapter.
      * @return Observable emitting True if initialisation ended successfully.
      */
     private Observable<Boolean> init(@NonNull final Application application, @NonNull final CallbackAdapter adapter) {
@@ -209,7 +209,14 @@ public abstract class BaseClient<T> implements IClient<T> {
                 //services
                 service = new InternalService(application, adapter, dataMgr, pushMgr, config.getApiSpaceId(), application.getPackageName(), log);
                 RestApi restApi = service.initialiseRestClient(logConfig.getNetworkLevel().getValue(), baseURIs);
-                SessionController sessionController = service.initialiseSessionController(application, new SessionCreateManager(new AtomicBoolean()), pushMgr, state, config.getAuthenticator(), restApi, new Handler(mainLooper), listenerListAdapter);
+                SessionController sessionController = service.initialiseSessionController(application,
+                        new SessionCreateManager(new AtomicBoolean()),
+                        pushMgr,
+                        state,
+                        config.getAuthenticator(),
+                        restApi, new Handler(mainLooper),
+                        config.isFcmEnabled(),
+                        listenerListAdapter);
 
                 //sockets
                 SocketController socketController = service.initialiseSocketClient(sessionController, listenerListAdapter, baseURIs);
