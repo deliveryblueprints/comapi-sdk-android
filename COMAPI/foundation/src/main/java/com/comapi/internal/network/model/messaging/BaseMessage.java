@@ -22,6 +22,7 @@ package com.comapi.internal.network.model.messaging;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -60,5 +61,18 @@ public class BaseMessage {
      */
     public List<Part> getParts() {
         return parts;
+    }
+
+    /**
+     * Adds metadata object to the message.
+     *
+     * @param key Metadata map key.
+     * @param value Metadata value.
+     */
+    public void addMetadata(String key, Object value) {
+        if (metadata == null) {
+            metadata = new HashMap<>();
+        }
+        metadata.put(key, value);
     }
 }

@@ -22,8 +22,6 @@ package com.comapi.internal.network.model.conversation;
 
 import android.text.TextUtils;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.util.UUID;
 
 /**
@@ -33,45 +31,6 @@ import java.util.UUID;
  * @since 1.0.0
  */
 public class ConversationUpdate extends ConversationBase {
-
-    @SerializedName("isPublic")
-    protected Boolean isPublic;
-
-    /**
-     * Check if the Conversation is public.
-     *
-     * @return True if Conversation is publicly accessible.
-     */
-    public Boolean isPublic() {
-        return isPublic;
-    }
-
-    /**
-     * Get name of the Conversation.
-     *
-     * @return Name of the Conversation.
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Get ID of the Conversation.
-     *
-     * @return ID of the Conversation.
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * Get description of the Conversation.
-     *
-     * @return Description of the Conversation.
-     */
-    public Roles getRoles() {
-        return roles;
-    }
 
     public static Builder builder() {
         return new Builder();

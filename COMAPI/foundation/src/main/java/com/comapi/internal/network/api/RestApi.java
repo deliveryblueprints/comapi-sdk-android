@@ -23,6 +23,7 @@ package com.comapi.internal.network.api;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
 import com.comapi.internal.network.model.session.PushConfig;
 import com.comapi.internal.network.model.session.SessionStartResponse;
@@ -44,6 +45,7 @@ import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Headers;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
@@ -103,6 +105,14 @@ public interface RestApi {
     @PUT("/apispaces/{apiSpaceId}/profiles/{id}")
     Observable<Response<Map<String, Object>>> updateProfile(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Path("id") String id, @Body Map<String, Object> profileUpdate);
 
+    @Headers({"Accept: application/json"})
+    @PATCH("/apispaces/{apiSpaceId}/profiles/{id}")
+    Observable<Response<Map<String, Object>>> patchProfile(@Header("Authorization") String authorization, @Header("If-Match") String eTag, @Path("apiSpaceId") String apiSpaceId, @Path("id") String id, @Body Map<String, Object> profileUpdate);
+
+    @Headers({"Accept: application/json"})
+    @PATCH("/apispaces/{apiSpaceId}/profiles/{id}")
+    Observable<Response<Map<String, Object>>> patchProfile(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Path("id") String id, @Body Map<String, Object> profileUpdate);
+
     /*
      * conversations
      */
@@ -125,7 +135,7 @@ public interface RestApi {
 
     @Headers({"Accept: application/json"})
     @GET("/apispaces/{apiSpaceId}/conversations")
-    Observable<Response<List<ConversationDetails>>> getConversations(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Query("scope") String scope, @Query("profileId") String profileId);
+    Observable<Response<List<Conversation>>> getConversations(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Query("scope") String scope, @Query("profileId") String profileId);
 
     @Headers({"Accept: application/json"})
     @PUT("/apispaces/{apiSpaceId}/conversations/{conversationId}")
@@ -138,6 +148,10 @@ public interface RestApi {
     @Headers({"Accept: application/json"})
     @POST("/apispaces/{apiSpaceId}/conversations/{conversationId}/typing")
     Observable<Response<Void>> isTyping(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Path("conversationId") String conversationId);
+
+    @Headers({"Accept: application/json"})
+    @DELETE("/apispaces/{apiSpaceId}/conversations/{conversationId}/typing")
+    Observable<Response<Void>> isNotTyping(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Path("conversationId") String conversationId);
 
     /*
      * participants

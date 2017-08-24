@@ -28,8 +28,10 @@ import com.comapi.internal.network.InternalService;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
+import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
 import com.comapi.internal.network.model.messaging.EventsQueryResponse;
 import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
@@ -141,6 +143,23 @@ public class ServiceAccessor {
          * @param callback       Callback with the result.
          */
         void updateProfile(@NonNull final Map<String, Object> profileDetails, final String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback);
+
+        /**
+         * Applies given profile patch if required permission is granted.
+         *
+         * @param profileId      Id of an profile to patch.
+         * @param profileDetails Profile details.
+         * @param callback       Callback with the result.
+         */
+        void patchProfile(@NonNull final String profileId, @NonNull final Map<String, Object> profileDetails, final String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback);
+
+        /**
+         * Applies profile patch for an active session.
+         *
+         * @param profileDetails Profile details.
+         * @param callback       Callback with the result.
+         */
+        void patchMyProfile(@NonNull final Map<String, Object> profileDetails, final String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback);
     }
 
     /**
@@ -182,8 +201,18 @@ public class ServiceAccessor {
          *
          * @param scope    {@link Scope} of the query
          * @param callback Callback with the result.
+         * @deprecated Please use {@link MessagingService#getConversations(boolean, Callback)} instead.
          */
+        @Deprecated
         void getConversations(@NonNull final Scope scope, @Nullable Callback<ComapiResult<List<ConversationDetails>>> callback);
+
+        /**
+         * Returns observable to get all visible conversations.
+         *
+         * @param isPublic Has the conversation public or private access.
+         * @param callback Callback with the result.
+         */
+        void getConversations(final boolean isPublic, @Nullable Callback<ComapiResult<List<Conversation>>> callback);
 
         /**
          * Returns observable to update a conversation.
@@ -255,8 +284,20 @@ public class ServiceAccessor {
          * @param from           ID of the event to start from.
          * @param limit          Limit of events to obtain in this call.
          * @param callback       Callback with the result.
+         * @deprecated Use {@link #queryConversationEvents(String, Long, Integer, Callback)} for better visibility of possible events in the response.
          */
+        @Deprecated
         void queryEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit, @Nullable Callback<ComapiResult<EventsQueryResponse>> callback);
+
+        /**
+         * Query conversation events.
+         *
+         * @param conversationId ID of a conversation to query events in it.
+         * @param from           ID of the event to start from.
+         * @param limit          Limit of events to obtain in this call.
+         * @param callback       Callback with the result.
+         */
+        void queryConversationEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit, @Nullable Callback<ComapiResult<ConversationEventsResponse>> callback);
 
         /**
          * Query conversation messages.
@@ -269,12 +310,21 @@ public class ServiceAccessor {
         void queryMessages(@NonNull final String conversationId, final Long from, @NonNull final Integer limit, @Nullable Callback<ComapiResult<MessagesQueryResponse>> callback);
 
         /**
-         * Sends participant is typing in conversation event.
+         * Sends information that the participant started typing a new message in a conversation.
          *
          * @param conversationId ID of a conversation in which participant is typing a message.
          * @param callback       Callback with the result.
          */
         void isTyping(@NonNull final String conversationId, @Nullable Callback<ComapiResult<Void>> callback);
+
+        /**
+         * Sends information to if the participant started or stopped typing a new message in a conversation.
+         *
+         * @param conversationId ID of a conversation in which participant is typing a message.
+         * @param isTyping       True if participant is typing, false if he has stopped typing.
+         * @param callback       Callback with the result.
+         */
+        void isTyping(@NonNull final String conversationId, final boolean isTyping, @Nullable Callback<ComapiResult<Void>> callback);
     }
 
     /**

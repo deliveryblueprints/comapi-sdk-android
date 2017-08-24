@@ -45,6 +45,7 @@ import com.comapi.internal.log.LogLevel;
 import com.comapi.internal.log.LogManager;
 import com.comapi.internal.log.Logger;
 import com.comapi.internal.network.api.RestApi;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
@@ -56,11 +57,13 @@ import com.comapi.internal.network.model.events.conversation.ConversationUpdateE
 import com.comapi.internal.network.model.events.conversation.ParticipantAddedEvent;
 import com.comapi.internal.network.model.events.conversation.ParticipantRemovedEvent;
 import com.comapi.internal.network.model.events.conversation.ParticipantTypingEvent;
+import com.comapi.internal.network.model.events.conversation.ParticipantTypingOffEvent;
 import com.comapi.internal.network.model.events.conversation.ParticipantUpdatedEvent;
 import com.comapi.internal.network.model.events.conversation.message.MessageDeliveredEvent;
 import com.comapi.internal.network.model.events.conversation.message.MessageReadEvent;
 import com.comapi.internal.network.model.events.conversation.message.MessageSentEvent;
 import com.comapi.internal.network.model.messaging.Alert;
+import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
 import com.comapi.internal.network.model.messaging.EventsQueryResponse;
 import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatus;
@@ -201,7 +204,7 @@ public class ServiceCallbackTest {
         restApi = service.initialiseRestClient(LogLevel.DEBUG.getValue(), baseURIs);
 
         isCreateSessionInProgress = new AtomicBoolean();
-        sessionController = service.initialiseSessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), new StateListener() {
+        sessionController = service.initialiseSessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), true, new StateListener() {
         });
         sessionController.setSocketController(new SocketController(dataMgr, new SocketEventListener() {
             @Override
@@ -261,6 +264,11 @@ public class ServiceCallbackTest {
 
             @Override
             public void onParticipantIsTyping(ParticipantTypingEvent event) {
+
+            }
+
+            @Override
+            public void onParticipantTypingOff(ParticipantTypingOffEvent event) {
 
             }
         }, log, new URI("ws://auth"), null));
@@ -339,7 +347,7 @@ public class ServiceCallbackTest {
     @Test
     public void getProfile_unauthorised_retry3times_shouldFail() throws Exception {
 
-        sessionController = new SessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, new StateListener() {
+        sessionController = new SessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, true, new StateListener() {
         }) {
             @Override
             protected Observable<SessionData> reAuthenticate() {
@@ -445,6 +453,52 @@ public class ServiceCallbackTest {
     }
 
     @Test
+    public void patchProfile() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        final MockCallback<ComapiResult<Map<String, Object>>> listener = new MockCallback<>();
+
+        service.patchMyProfile(map, "eTag", listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getResult().get("id"));
+        assertNotNull(listener.getResult().getETag());
+    }
+
+    @Test
+    public void patchProfile2() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        final MockCallback<ComapiResult<Map<String, Object>>> listener = new MockCallback<>();
+
+        service.patchProfile("someId", map, null, listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getResult().get("id"));
+        assertNotNull(listener.getResult().getETag());
+    }
+
+    @Test
     public void createConversation() throws Exception {
 
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_conversation_create.json", 201).addHeader("ETag", "eTag"));
@@ -521,6 +575,43 @@ public class ServiceCallbackTest {
 
         assertEquals(true, listener.getResult().isSuccessful());
         assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getResult().get(0).getDescription());
+        assertNotNull(listener.getResult().getResult().get(0).getId());
+        assertNotNull(listener.getResult().getResult().get(0).getName());
+        assertNotNull(listener.getResult().getResult().get(0).getRoles().getOwner());
+        assertNotNull(listener.getResult().getResult().get(0).getRoles().getParticipant());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getParticipant().getCanAddParticipants().booleanValue());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getParticipant().getCanRemoveParticipants().booleanValue());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getParticipant().getCanSend().booleanValue());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getOwner().getCanAddParticipants().booleanValue());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getOwner().getCanRemoveParticipants().booleanValue());
+        assertEquals(true, listener.getResult().getResult().get(0).getRoles().getOwner().getCanSend().booleanValue());
+        assertNotNull(listener.getResult().getETag());
+    }
+
+    @Test
+    public void getConversationsExtended() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_conversations_get_ext.json", 200).addHeader("ETag", "eTag"));
+
+        final MockCallback<ComapiResult<List<Conversation>>> listener = new MockCallback<>();
+
+        service.getConversations(false, listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+
+        assertEquals("eTag", listener.getResult().getResult().get(0).getETag());
+        assertEquals("eTag", listener.getResult().getResult().get(1).getETag());
+        assertEquals(Long.valueOf(24), listener.getResult().getResult().get(0).getLatestSentEventId());
+        assertNull(listener.getResult().getResult().get(1).getLatestSentEventId());
+        assertEquals(Integer.valueOf(2), listener.getResult().getResult().get(0).getParticipantCount());
+        assertEquals(Integer.valueOf(1), listener.getResult().getResult().get(1).getParticipantCount());
+
         assertNotNull(listener.getResult().getResult().get(0).getDescription());
         assertNotNull(listener.getResult().getResult().get(0).getId());
         assertNotNull(listener.getResult().getResult().get(0).getName());
@@ -690,6 +781,7 @@ public class ServiceCallbackTest {
         assertEquals(200, listener.getResult().getCode());
         assertNotNull(listener.getResult().getETag());
         assertNotNull(listener.getResult().getResult().getId());
+        assertNotNull(listener.getResult().getResult().getEventId());
     }
 
     @Test
@@ -709,6 +801,7 @@ public class ServiceCallbackTest {
         assertEquals(200, listener.getResult().getCode());
         assertNotNull(listener.getResult().getETag());
         assertNotNull(listener.getResult().getResult().getId());
+        assertNotNull(listener.getResult().getResult().getEventId());
     }
 
     @Test
@@ -796,6 +889,54 @@ public class ServiceCallbackTest {
     }
 
     @Test
+    public void queryConversationEvents() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_conversation_events_query.json", 200).addHeader("ETag", "eTag"));
+
+        final MockCallback<ComapiResult<ConversationEventsResponse>> listener = new MockCallback<>();
+
+        service.queryConversationEvents("someId", 0L, 100, listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getETag());
+
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getEventId());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getName());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getConversationEventId());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getMessageId());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getConversationId());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getProfileId());
+        assertNotNull(listener.getResult().getResult().getMessageRead().get(0).getTimestamp());
+
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getEventId());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getName());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getConversationEventId());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getMessageId());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getConversationId());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getProfileId());
+        assertNotNull(listener.getResult().getResult().getMessageDelivered().get(0).getTimestamp());
+
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getEventId());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getName());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getConversationEventId());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getMessageId());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getAlert().getPlatforms().getFcm().get("notification"));
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getAlert().getPlatforms().getFcm().get("data"));
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getConversationId());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getSentBy());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getSentOn());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getFromWhom().getId());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getFromWhom().getName());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getContext().getFromWhom().getName());
+        assertNotNull(listener.getResult().getResult().getMessageSent().get(0).getMetadata().get("key"));
+    }
+
+    @Test
     public void queryMessages() throws Exception {
 
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_message_query.json", 200).addHeader("ETag", "eTag"));
@@ -842,6 +983,22 @@ public class ServiceCallbackTest {
         final MockCallback<ComapiResult<Void>> listener = new MockCallback<>();
 
         service.isTyping("conversationId", listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+    }
+
+    @Test
+    public void isNotTyping() throws InterruptedException {
+
+        server.enqueue(new MockResponse().setResponseCode(200));
+
+        final MockCallback<ComapiResult<Void>> listener = new MockCallback<>();
+
+        service.isTyping("conversationId", false, listener);
 
         synchronized (listener) {
             listener.wait(TIME_OUT);

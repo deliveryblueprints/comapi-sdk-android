@@ -43,10 +43,6 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
 
     protected String apiSpaceId;
 
-    protected IStateListener stateListener;
-
-    protected IProfileListener profileListener;
-
     protected CallbackAdapter callbackAdapter;
 
     protected int logSizeLimit;
@@ -54,6 +50,8 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
     protected APIConfig apiConfig;
 
     private PushTokenProvider pushTokenProvider;
+
+    protected boolean fcmEnabled = true;
 
     /**
      * Gets Comapi ApiSpace identifier.
@@ -92,24 +90,6 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
     }
 
     /**
-     * Gets listener for SDK state changes.
-     *
-     * @return Listener for SDK state changes.
-     */
-    protected IStateListener getStateListener() {
-        return stateListener;
-    }
-
-    /**
-     * Gets listener for profile changes.
-     *
-     * @return Listener for profile changes.
-     */
-    protected IProfileListener getProfileListener() {
-        return profileListener;
-    }
-
-    /**
      * Gets observables to callbacks adapter.
      *
      * @return Observables to callbacks adapter.
@@ -143,6 +123,15 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      */
     PushTokenProvider getPushTokenProvider() {
         return pushTokenProvider;
+    }
+
+    /**
+     * Is Firebase Cloud Messaging configuraed and initialised. If yes the SDK will register FCM token on the server.
+     *
+     * @return True if Firebase Cloud Messaging is configured and initialised
+     */
+    boolean isFcmEnabled() {
+        return fcmEnabled;
     }
 
     /**
@@ -190,30 +179,6 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
     }
 
     /**
-     * Sets listener for SDK state changes.
-     *
-     * @param stateListener {@link StateListener} callback for state changes.
-     * @param <E>           Extends {@link StateListener}
-     * @return BaseURIs instance with new value set.
-     */
-    public <E extends StateListener> T stateListener(E stateListener) {
-        this.stateListener = stateListener;
-        return getThis();
-    }
-
-    /**
-     * Sets listener for profile changes.
-     *
-     * @param profileListener {@link ProfileListener} callback for profile changes.
-     * @param <E>             Extends {@link ProfileListener}
-     * @return BaseURIs instance with new value set.
-     */
-    public <E extends ProfileListener> T profileListener(E profileListener) {
-        this.profileListener = profileListener;
-        return getThis();
-    }
-
-    /**
      * Sets total file size limit for internal logs.
      *
      * @param limit Total file size limit for internal logs.
@@ -243,6 +208,16 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      */
     T pushTokenProvider(PushTokenProvider pushTokenProvider) {
         this.pushTokenProvider = pushTokenProvider;
+        return getThis();
+    }
+
+    /**
+     * Sets if Firebase Cloud Messaging is configured and initialised. If yes the SDK will register FCM token on the server.
+     *
+     * @param fcmEnabled True if Firebase Cloud Messaging is configured and initialised
+     */
+    public T fcmEnabled(boolean fcmEnabled) {
+        this.fcmEnabled = fcmEnabled;
         return getThis();
     }
 

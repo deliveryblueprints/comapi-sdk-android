@@ -43,11 +43,13 @@ import com.comapi.internal.log.Logger;
 import com.comapi.internal.network.api.ComapiService;
 import com.comapi.internal.network.api.RestApi;
 import com.comapi.internal.network.api.RxComapiService;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
+import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
 import com.comapi.internal.network.model.messaging.EventsQueryResponse;
 import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
@@ -58,6 +60,7 @@ import com.comapi.internal.network.sockets.SocketController;
 import com.comapi.internal.network.sockets.SocketEventListener;
 import com.comapi.internal.push.PushManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -140,11 +143,18 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      * @param auth                 ComapiImplementation calls authentication request callback
      * @param restApi              Rest API definitions.
      * @param handler              Main thread handler.
+     * @param fcmEnabled           True if Firebase initialised and configured.
      * @param sessionListener      Listener for new sessions.
      * @return Controller for creating and managing session.
      */
-    public SessionController initialiseSessionController(Application application, @NonNull SessionCreateManager sessionCreateManager, PushManager pushMgr, @NonNull AtomicInteger state, @NonNull ComapiAuthenticator auth, @NonNull RestApi restApi, Handler handler, @NonNull final ISessionListener sessionListener) {
-        sessionController = new SessionController(application, sessionCreateManager, pushMgr, state, dataMgr, auth, restApi, packageName, handler, log, getTaskQueue(), sessionListener);
+    public SessionController initialiseSessionController(Application application,
+                                                         @NonNull SessionCreateManager sessionCreateManager, PushManager pushMgr,
+                                                         @NonNull AtomicInteger state, @NonNull ComapiAuthenticator auth,
+                                                         @NonNull RestApi restApi,
+                                                         @NonNull Handler handler,
+                                                         boolean fcmEnabled, @NonNull
+                                                         final ISessionListener sessionListener) {
+        sessionController = new SessionController(application, sessionCreateManager, pushMgr, state, dataMgr, auth, restApi, packageName, handler, log, getTaskQueue(), fcmEnabled, sessionListener);
         return sessionController;
     }
 
@@ -325,8 +335,74 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      * @param profileDetails Profile details.
      * @param callback       Callback to deliver new session instance.
      */
+    @Override
     public void updateProfile(@NonNull final Map<String, Object> profileDetails, final String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback) {
         adapter.adapt(updateProfile(profileDetails, eTag), callback);
+    }
+
+    /**
+     * Applies given profile patch if required permission is granted.
+     *
+     * @param profileId      Id of an profile to patch.
+     * @param profileDetails Profile details.
+     * @param eTag           ETag for server to check if local version of the data is the same as the one the server side.
+     * @return Observable with to perform update profile for current session.
+     */
+    @Override
+    public Observable<ComapiResult<Map<String, Object>>> patchProfile(@NonNull final String profileId, @NonNull final Map<String, Object> profileDetails, final String eTag) {
+
+        final String token = getToken();
+
+        if (sessionController.isCreatingSession()) {
+            return getTaskQueue().queuePatchProfile(profileDetails, eTag);
+        } else if (TextUtils.isEmpty(token)) {
+            return Observable.error(getSessionStateErrorDescription());
+        } else {
+            return doPatchProfile(token, dataMgr.getSessionDAO().session().getProfileId(), profileDetails, eTag);
+        }
+    }
+
+    /**
+     * Applies profile patch for an active session.
+     *
+     * @param profileDetails Profile details.
+     * @param eTag           ETag for server to check if local version of the data is the same as the one the server side.
+     * @return Observable with to perform update profile for current session.
+     */
+    @Override
+    public Observable<ComapiResult<Map<String, Object>>> patchMyProfile(@NonNull Map<String, Object> profileDetails, String eTag) {
+
+        final SessionData session = dataMgr.getSessionDAO().session();
+        final String profileId = session != null ? session.getProfileId() : null;
+
+        if (TextUtils.isEmpty(profileId)) {
+            return Observable.error(getSessionStateErrorDescription());
+        } else {
+            return patchProfile(profileId, profileDetails, eTag);
+        }
+    }
+
+    /**
+     * Applies given profile patch if required permission is granted.
+     *
+     * @param profileId      Id of an profile to patch.
+     * @param profileDetails Profile details.
+     * @param callback       Callback with the result.
+     */
+    @Override
+    public void patchProfile(@NonNull final String profileId, @NonNull Map<String, Object> profileDetails, String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback) {
+        adapter.adapt(patchProfile(profileId, profileDetails, eTag), callback);
+    }
+
+    /**
+     * Applies profile patch for an active session.
+     *
+     * @param profileDetails Profile details.
+     * @param callback       Callback with the result.
+     */
+    @Override
+    public void patchMyProfile(@NonNull Map<String, Object> profileDetails, String eTag, @Nullable Callback<ComapiResult<Map<String, Object>>> callback) {
+        adapter.adapt(patchMyProfile(profileDetails, eTag), callback);
     }
 
     /**
@@ -423,7 +499,9 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      *
      * @param scope {@link Scope} of the query
      * @return Observable to to create a conversation.
+     * @deprecated Please use {@link InternalService#getConversations(boolean)} instead.
      */
+    @Deprecated
     public Observable<ComapiResult<List<ConversationDetails>>> getConversations(@NonNull final Scope scope) {
 
         final String token = getToken();
@@ -433,8 +511,44 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
         } else if (TextUtils.isEmpty(token)) {
             return Observable.error(getSessionStateErrorDescription());
         } else {
-            return doGetConversations(token, dataMgr.getSessionDAO().session().getProfileId(), scope);
+            return doGetConversations(token, dataMgr.getSessionDAO().session().getProfileId(), scope).map(result -> {
+                List<ConversationDetails> newList = new ArrayList<>();
+                List<Conversation> oldList = result.getResult();
+                if (oldList != null && !oldList.isEmpty()) {
+                    newList.addAll(oldList);
+                }
+                return new ComapiResult<>(result, newList);
+            });
         }
+    }
+
+    /**
+     * Returns observable to get all visible conversations.
+     *
+     * @param isPublic Has the conversation public or private access.
+     * @return Observable to to create a conversation.
+     */
+    public Observable<ComapiResult<List<Conversation>>> getConversations(final boolean isPublic) {
+
+        final String token = getToken();
+
+        if (sessionController.isCreatingSession()) {
+            return getTaskQueue().queueGetConversationsExt(isPublic ? Scope.PUBLIC : Scope.PARTICIPANT);
+        } else if (TextUtils.isEmpty(token)) {
+            return Observable.error(getSessionStateErrorDescription());
+        } else {
+            return doGetConversations(token, dataMgr.getSessionDAO().session().getProfileId(), isPublic ? Scope.PUBLIC : Scope.PARTICIPANT);
+        }
+    }
+
+    /**
+     * Returns observable to get all visible conversations.
+     *
+     * @param isPublic Has the conversation public or private access.
+     * @param callback Callback to deliver new session instance.
+     */
+    public void getConversations(final boolean isPublic, @Nullable Callback<ComapiResult<List<Conversation>>> callback) {
+        adapter.adapt(getConversations(isPublic), callback);
     }
 
     /**
@@ -442,7 +556,9 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      *
      * @param scope    {@link Scope} of the query
      * @param callback Callback to deliver new session instance.
+     * @deprecated Please use {@link InternalService#getConversations(boolean, Callback)} instead.
      */
+    @Deprecated
     public void getConversations(@NonNull final Scope scope, @Nullable Callback<ComapiResult<List<ConversationDetails>>> callback) {
         adapter.adapt(getConversations(scope), callback);
     }
@@ -658,7 +774,7 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
     }
 
     /**
-     * Query chanel events.
+     * Query events. Use {@link #queryConversationEvents(String, Long, Integer)} for better visibility of possible events.
      *
      * @param conversationId ID of a conversation to query events in it.
      * @param from           ID of the event to start from.
@@ -679,6 +795,27 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
     }
 
     /**
+     * Query conversation events.
+     *
+     * @param conversationId ID of a conversation to query events in it.
+     * @param from           ID of the event to start from.
+     * @param limit          Limit of events to obtain in this call.
+     * @return Observable to get events from a conversation.
+     */
+    public Observable<ComapiResult<ConversationEventsResponse>> queryConversationEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit) {
+
+        final String token = getToken();
+
+        if (sessionController.isCreatingSession()) {
+            return getTaskQueue().queueQueryConversationEvents(conversationId, from, limit);
+        } else if (TextUtils.isEmpty(token)) {
+            return Observable.error(getSessionStateErrorDescription());
+        } else {
+            return doQueryConversationEvents(token, conversationId, from, limit);
+        }
+    }
+
+    /**
      * Query chanel events.
      *
      * @param conversationId ID of a conversation to query events in it.
@@ -688,6 +825,18 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      */
     public void queryEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit, @Nullable Callback<ComapiResult<EventsQueryResponse>> callback) {
         adapter.adapt(queryEvents(conversationId, from, limit), callback);
+    }
+
+    /**
+     * Query chanel events.
+     *
+     * @param conversationId ID of a conversation to query events in it.
+     * @param from           ID of the event to start from.
+     * @param limit          Limit of events to obtain in this call.
+     * @param callback       Callback to deliver new session instance.
+     */
+    public void queryConversationEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit, @Nullable Callback<ComapiResult<ConversationEventsResponse>> callback) {
+        adapter.adapt(queryConversationEvents(conversationId, from, limit), callback);
     }
 
     /**
@@ -736,7 +885,7 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
         if (sessionController.isCreatingSession() || TextUtils.isEmpty(token)) {
             return Observable.error(getSessionStateErrorDescription());
         } else {
-            return doIsTyping(token, conversationId);
+            return doIsTyping(token, conversationId, true);
         }
     }
 
@@ -747,7 +896,36 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      * @param callback       Callback to deliver result.
      */
     public void isTyping(@NonNull final String conversationId, @Nullable Callback<ComapiResult<Void>> callback) {
-        adapter.adapt(isTyping(conversationId), callback);
+        adapter.adapt(isTyping(conversationId, true), callback);
+    }
+
+    /**
+     * Send participant typing type of event for a specified conversation.
+     *
+     * @param conversationId ID of a conversation.
+     * @param isTyping       True if participant is typing, false if he has stopped typing.
+     * @return Observable to send event.
+     */
+    public Observable<ComapiResult<Void>> isTyping(@NonNull final String conversationId, final boolean isTyping) {
+
+        final String token = getToken();
+
+        if (sessionController.isCreatingSession() || TextUtils.isEmpty(token)) {
+            return Observable.error(getSessionStateErrorDescription());
+        } else {
+            return doIsTyping(token, conversationId, isTyping);
+        }
+    }
+
+    /**
+     * Send participant typing type of event for a specified conversation.
+     *
+     * @param conversationId ID of a conversation.
+     * @param isTyping       True if participant is typing, false if he has stopped typing.
+     * @param callback       Callback to deliver result.
+     */
+    public void isTyping(@NonNull final String conversationId, final boolean isTyping, @Nullable Callback<ComapiResult<Void>> callback) {
+        adapter.adapt(isTyping(conversationId, isTyping), callback);
     }
 
     /**

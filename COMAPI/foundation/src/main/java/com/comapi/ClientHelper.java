@@ -65,4 +65,9 @@ public class ClientHelper {
     public static void resetShared() {
         RxComapi.reset();
     }
+
+    public static void resetChecks() {
+        Comapi.reset();
+        RxComapi.reset();
+    }
 }

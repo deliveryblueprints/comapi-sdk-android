@@ -44,7 +44,7 @@ public class RxComapiClient extends BaseClient<RxServiceAccessor> {
      *
      * @param config ComapiImpl configuration.
      */
-    RxComapiClient(final ComapiConfig config) {
+    protected RxComapiClient(final ComapiConfig config) {
         super(config);
     }
 
@@ -106,7 +106,7 @@ public class RxComapiClient extends BaseClient<RxServiceAccessor> {
      *
      * @return Internal logger.
      */
-    Logger getLogger() {
+    protected Logger getLogger() {
         return super.getLogger();
     }
 
@@ -119,7 +119,7 @@ public class RxComapiClient extends BaseClient<RxServiceAccessor> {
         super.addLifecycleListener(listener);
     }
 
-    RxComapiService getComapiService() {
+    protected RxComapiService getComapiService() {
         return service;
     }
 }

@@ -34,18 +34,6 @@ import java.util.UUID;
  */
 public class ConversationCreate extends ConversationBase {
 
-    @SerializedName("isPublic")
-    protected Boolean isPublic;
-
-    /**
-     * Check if the Conversation is public.
-     *
-     * @return True if Conversation is publicly accessible.
-     */
-    public Boolean isPublic() {
-        return isPublic;
-    }
-
     public static Builder builder() {
         return new Builder();
     }

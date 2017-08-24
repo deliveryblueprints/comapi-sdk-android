@@ -18,14 +18,43 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.comapi.internal.network.model.conversation;
+package com.comapi.internal.network.model.events.conversation;
 
-/**
- * Details of a conversation.
- *
- * @author Marcin Swierczek
- * @since 1.0.0
- */
-public class ConversationDetails extends ConversationBase {
+import com.comapi.internal.network.model.events.Event;
+import com.google.gson.annotations.SerializedName;
 
+public class ParticipantTypingOffEvent extends Event {
+
+    public static final String TYPE = "conversation.participantTypingOff";
+
+    @SerializedName("payload")
+    private Payload payload;
+
+    /**
+     * Get conversation id in which participant stopped typing.
+     *
+     * @return Conversation id in which participant stopped typing.
+     */
+    public String getConversationId() {
+        return payload != null ? payload.conversationId : null;
+    }
+
+    /**
+     * Get profile id of an participant who stopped typing new message.
+     *
+     * @return Profile id of an participant who stopped typing new message.
+     */
+    public String getProfileId() {
+        return payload != null ? payload.profileId : null;
+    }
+
+    private class Payload {
+
+        @SerializedName("conversationId")
+        private String conversationId;
+
+        @SerializedName("profileId")
+        private String profileId;
+
+    }
 }

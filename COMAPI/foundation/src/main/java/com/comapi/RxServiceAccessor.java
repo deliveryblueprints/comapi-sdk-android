@@ -28,8 +28,10 @@ import com.comapi.internal.network.InternalService;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
+import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.conversation.Participant;
 import com.comapi.internal.network.model.conversation.Scope;
+import com.comapi.internal.network.model.messaging.ConversationEventsResponse;
 import com.comapi.internal.network.model.messaging.EventsQueryResponse;
 import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
@@ -152,6 +154,22 @@ public class RxServiceAccessor {
          * @return Observable with to perform update profile for current session.
          */
         Observable<ComapiResult<Map<String, Object>>> updateProfile(@NonNull final Map<String, Object> profileDetails, final String eTag);
+
+        /**
+         * Applies given profile patch if required permission is granted.
+         *
+         * @param profileDetails Profile details.
+         * @return Observable with to perform patch profile for current session.
+         */
+        Observable<ComapiResult<Map<String, Object>>> patchProfile(@NonNull String profileId, @NonNull final Map<String, Object> profileDetails, final String eTag);
+
+        /**
+         * Applies profile patch for an active session.
+         *
+         * @param profileDetails Profile details.
+         * @return Observable with to perform patch profile for current session.
+         */
+        Observable<ComapiResult<Map<String, Object>>> patchMyProfile(@NonNull final Map<String, Object> profileDetails, final String eTag);
     }
 
     /**
@@ -193,8 +211,18 @@ public class RxServiceAccessor {
          *
          * @param scope {@link Scope} of the query
          * @return Observable to to create a conversation.
+         * @deprecated Please use {@link MessagingService#getConversations(boolean)} instead.
          */
+        @Deprecated
         Observable<ComapiResult<List<ConversationDetails>>> getConversations(@NonNull final Scope scope);
+
+        /**
+         * Returns observable to get all visible conversations.
+         *
+         * @param isPublic Has the conversation public or private access.
+         * @return Observable to to create a conversation.
+         */
+        Observable<ComapiResult<List<Conversation>>> getConversations(final boolean isPublic);
 
         /**
          * Returns observable to update a conversation.
@@ -267,6 +295,18 @@ public class RxServiceAccessor {
          * @param limit          Limit of events to obtain in this call.
          * @return Observable to get events from a conversation.
          */
+        Observable<ComapiResult<ConversationEventsResponse>> queryConversationEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit);
+
+        /**
+         * Query events.
+         *
+         * @param conversationId ID of a conversation to query events in it.
+         * @param from           ID of the event to start from.
+         * @param limit          Limit of events to obtain in this call.
+         * @return Observable to get events from a conversation.
+         * @deprecated Use {@link #queryConversationEvents(String, Long, Integer)} for better visibility of possible events in the response.
+         */
+        @Deprecated
         Observable<ComapiResult<EventsQueryResponse>> queryEvents(@NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit);
 
         /**
@@ -280,12 +320,21 @@ public class RxServiceAccessor {
         Observable<ComapiResult<MessagesQueryResponse>> queryMessages(@NonNull final String conversationId, final Long from, @NonNull final Integer limit);
 
         /**
-         * Sends participant is typing in conversation event.
+         * Sends information that the participant started typing a new message in a conversation.
          *
          * @param conversationId ID of a conversation in which participant is typing a message.
          * @return Observable to send event.
          */
         Observable<ComapiResult<Void>> isTyping(@NonNull final String conversationId);
+
+        /**
+         * Sends information to if the participant started or stopped typing a new message in a conversation.
+         *
+         * @param conversationId ID of a conversation in which participant is typing a message.
+         * @param isTyping       True if participant is typing, false if he has stopped typing.
+         * @return Observable to send event.
+         */
+        Observable<ComapiResult<Void>> isTyping(@NonNull final String conversationId, final boolean isTyping);
     }
 
     /**

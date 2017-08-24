@@ -103,6 +103,8 @@ public class SessionController extends ApiWrapper {
      */
     private final Logger log;
 
+    private final boolean isFcmEnabled;
+
     /**
      * Controls socket connections.
      */
@@ -134,6 +136,7 @@ public class SessionController extends ApiWrapper {
      * @param handler              Main thread handler.
      * @param log                  Internal logger.
      * @param taskQueue            Service calls queue used when SDK is re-authenticating.
+     * @param fcmEnabled           True if Firebase initialised and configured.
      * @param stateListener        Listener for new sessions.
      */
     SessionController(@NonNull Application application,
@@ -147,6 +150,7 @@ public class SessionController extends ApiWrapper {
                       @NonNull Handler handler,
                       @NonNull final Logger log,
                       @NonNull ServiceQueue.TaskQueue taskQueue,
+                      boolean fcmEnabled,
                       @Nullable final ISessionListener stateListener) {
 
         super(application);
@@ -162,6 +166,7 @@ public class SessionController extends ApiWrapper {
         this.handler = handler;
         this.stateListener = stateListener;
         this.taskQueue = taskQueue;
+        this.isFcmEnabled = fcmEnabled;
 
         SessionData session = dataMgr.getSessionDAO().session();
         if (session != null) {
@@ -204,16 +209,23 @@ public class SessionController extends ApiWrapper {
                         }
                     })
                     .doOnError(throwable -> state.compareAndSet(GlobalState.SESSION_STARTING, GlobalState.SESSION_OFF))
-                    .concatMap(session -> updatePushToken(session)
-                            .doOnNext(pushUpdateResult -> {
-                                if (!pushUpdateResult.second.isSuccessful()) {
-                                    log.e("Failed to update push token on the server. " + pushUpdateResult.second.message());
-                                } else {
-                                    log.i("Push token updated on the server.");
-                                }
-                            })
-                            .doOnError(throwable -> log.f("Failed to update push token on the server.", throwable))
-                            .map(sessionResultPair -> sessionResultPair.first));
+                    .concatMap(session ->
+                    {
+                        if (isFcmEnabled) {
+                            return updatePushToken(session)
+                                    .doOnNext(pushUpdateResult -> {
+                                        if (!pushUpdateResult.second.isSuccessful()) {
+                                            log.e("Failed to update push token on the server. " + pushUpdateResult.second.message());
+                                        } else {
+                                            log.i("Push token updated on the server.");
+                                        }
+                                    })
+                                    .doOnError(throwable -> log.f("Failed to update push token on the server.", throwable))
+                                    .map(sessionResultPair -> sessionResultPair.first);
+                        } else {
+                            return Observable.fromCallable(() -> session);
+                        }
+                    });
         }
 
         return Observable.error(new ComapiException("Session already started or SDK not initialised. Stop the active session first. [" + state.get() + "]"));
@@ -235,7 +247,7 @@ public class SessionController extends ApiWrapper {
     /**
      * Observable for a task to start a new session.
      *
-     * @param deviceId  Device Id.
+     * @param deviceId Device Id.
      * @return Observable for a task to start a new session.
      */
     private Observable<SessionCreateResponse> doStartSessionServiceCalls(@NonNull final String deviceId) {

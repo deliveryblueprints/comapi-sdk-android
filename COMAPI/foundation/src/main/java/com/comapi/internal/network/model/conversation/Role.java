@@ -120,5 +120,38 @@ public class Role {
             role.canRemoveParticipants = true;
             return this;
         }
+
+        /**
+         * Participant with this role will be able to send messages to the conversation.
+         *
+         * @param canSend Will be able to send messages if true.
+         * @return Instance of the role that allows sending messages to the conversation.
+         */
+        public Builder setCanSend(boolean canSend) {
+            role.canSend = canSend;
+            return this;
+        }
+
+        /**
+         * Participant with this role will be able to add participants to the conversation.
+         *
+         * @param canAddParticipants Will be able to add participants if true.
+         * @return Instance of the role that allows adding participants to the conversation.
+         */
+        public Builder setCanAddParticipants(boolean canAddParticipants) {
+            role.canAddParticipants = canAddParticipants;
+            return this;
+        }
+
+        /**
+         * Participant with this role will be able to remove participants from the conversation.
+         *
+         * @param canRemoveParticipants Will be able to remove participants if true.
+         * @return Instance of the role that allows removing participants from the conversation.
+         */
+        public Builder setCanRemoveParticipants(boolean canRemoveParticipants) {
+            role.canRemoveParticipants = canRemoveParticipants;
+            return this;
+        }
     }
 }

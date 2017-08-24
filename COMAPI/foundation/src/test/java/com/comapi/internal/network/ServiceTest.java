@@ -50,6 +50,7 @@ import com.comapi.internal.network.model.events.conversation.ConversationUpdateE
 import com.comapi.internal.network.model.events.conversation.ParticipantAddedEvent;
 import com.comapi.internal.network.model.events.conversation.ParticipantRemovedEvent;
 import com.comapi.internal.network.model.events.conversation.ParticipantTypingEvent;
+import com.comapi.internal.network.model.events.conversation.ParticipantTypingOffEvent;
 import com.comapi.internal.network.model.events.conversation.ParticipantUpdatedEvent;
 import com.comapi.internal.network.model.events.conversation.message.MessageDeliveredEvent;
 import com.comapi.internal.network.model.events.conversation.message.MessageReadEvent;
@@ -160,7 +161,7 @@ public class ServiceTest {
         restApi = service.initialiseRestClient(LogLevel.DEBUG.getValue(), baseURIs);
 
         isCreateSessionInProgress = new AtomicBoolean();
-        sessionController = service.initialiseSessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), new StateListener() {
+        sessionController = service.initialiseSessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), true, new StateListener() {
         });
         sessionController.setSocketController(new SocketController(dataMgr, new SocketEventListener() {
             @Override
@@ -221,6 +222,11 @@ public class ServiceTest {
 
             @Override
             public void onParticipantIsTyping(ParticipantTypingEvent event) {
+
+            }
+
+            @Override
+            public void onParticipantTypingOff(ParticipantTypingOffEvent event) {
 
             }
         }, log, new URI("ws://auth"), null));
@@ -309,7 +315,7 @@ public class ServiceTest {
     @Test
     public void getProfile_unauthorised_retry3times_shouldFail() throws Exception {
 
-        sessionController = new SessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, new StateListener() {
+        sessionController = new SessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, true, new StateListener() {
         }) {
             @Override
             protected Observable<SessionData> reAuthenticate() {
@@ -483,6 +489,86 @@ public class ServiceTest {
     }
 
     @Test
+    public void patchProfile() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        service.patchMyProfile(map, "eTag").toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getResult().get("id"));
+            assertNotNull(response.getETag());
+        });
+    }
+
+    @Test
+    public void patchProfile2() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        service.patchProfile("someId", map, null).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getResult().get("id"));
+            assertNotNull(response.getETag());
+        });
+    }
+
+    @Test
+    public void patchProfile_sessionCreateInProgress() throws Exception {
+        isCreateSessionInProgress.set(true);
+        service.patchMyProfile(new HashMap<>(), null).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        assertEquals(1, service.getTaskQueue().queue.size());
+        isCreateSessionInProgress.set(false);
+        service.getTaskQueue().executePending();
+        assertEquals(0, service.getTaskQueue().queue.size());
+    }
+
+    @Test
+    public void patchProfile2_sessionCreateInProgress() throws Exception {
+        isCreateSessionInProgress.set(true);
+        service.patchProfile("someId", new HashMap<>(), null).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        assertEquals(1, service.getTaskQueue().queue.size());
+        isCreateSessionInProgress.set(false);
+        service.getTaskQueue().executePending();
+        assertEquals(0, service.getTaskQueue().queue.size());
+    }
+
+    @Test(expected = ComapiException.class)
+    public void patchProfile_sessionCreateInProgress_noToken() throws Exception {
+        DataTestHelper.clearSessionData();
+        isCreateSessionInProgress.set(false);
+        service.patchMyProfile(new HashMap<>(), null).timeout(3, TimeUnit.SECONDS).toBlocking().subscribe();
+    }
+
+    @Test(expected = ComapiException.class)
+    public void patchProfile2_sessionCreateInProgress_noToken() throws Exception {
+        DataTestHelper.clearSessionData();
+        isCreateSessionInProgress.set(false);
+        service.patchProfile("someId", new HashMap<>(), null).timeout(3, TimeUnit.SECONDS).toBlocking().subscribe();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void patchProfile_noSession_shouldFail() throws Exception {
+        DataTestHelper.clearSessionData();
+        patchProfile();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void patchProfile2_noSession_shouldFail() throws Exception {
+        DataTestHelper.clearSessionData();
+        patchProfile2();
+    }
+
+    @Test
     public void isTyping() {
         server.enqueue(new MockResponse().setResponseCode(200));
         service.isTyping("conversationId").toBlocking().forEach(response -> {
@@ -492,9 +578,24 @@ public class ServiceTest {
     }
 
     @Test
+    public void isNotTyping() {
+
+        server.enqueue(new MockResponse().setResponseCode(200));
+        service.isTyping("conversationId", false).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+        });
+    }
+
+    @Test
     public void isTyping_sessionCreateInProgress() throws Exception {
         isCreateSessionInProgress.set(true);
+
         service.isTyping("conversationId").timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        // Not adding
+        assertEquals(0, service.getTaskQueue().queue.size());
+
+        service.isTyping("conversationId", false).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
         // Not adding
         assertEquals(0, service.getTaskQueue().queue.size());
     }
@@ -506,10 +607,23 @@ public class ServiceTest {
         service.isTyping("conversationId").timeout(3, TimeUnit.SECONDS).toBlocking().subscribe();
     }
 
+    @Test(expected = ComapiException.class)
+    public void isNotTyping_sessionCreateInProgress_noToken() throws Exception {
+        DataTestHelper.clearSessionData();
+        isCreateSessionInProgress.set(false);
+        service.isTyping("conversationId", false).timeout(3, TimeUnit.SECONDS).toBlocking().subscribe();
+    }
+
     @Test(expected = RuntimeException.class)
     public void isTyping_noSession_shouldFail() throws Exception {
         DataTestHelper.clearSessionData();
         isTyping();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void isNotTyping_noSession_shouldFail() throws Exception {
+        DataTestHelper.clearSessionData();
+        isNotTyping();
     }
 
     @Test
@@ -631,6 +745,53 @@ public class ServiceTest {
     public void getConversations_noSession_shouldFail() throws Exception {
         DataTestHelper.clearSessionData();
         getConversations();
+    }
+
+    @Test
+    public void getConversationsExtended() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_conversations_get_ext.json", 200).addHeader("ETag", "eTag"));
+
+        service.getConversations(false).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+
+            assertEquals("eTag", response.getResult().get(0).getETag());
+            assertEquals("eTag", response.getResult().get(1).getETag());
+            assertEquals(Long.valueOf(24), response.getResult().get(0).getLatestSentEventId());
+            assertNull(response.getResult().get(1).getLatestSentEventId());
+            assertEquals(Integer.valueOf(2), response.getResult().get(0).getParticipantCount());
+            assertEquals(Integer.valueOf(1), response.getResult().get(1).getParticipantCount());
+
+            assertNotNull(response.getResult().get(0).getDescription());
+            assertNotNull(response.getResult().get(0).getId());
+            assertNotNull(response.getResult().get(0).getName());
+            assertNotNull(response.getResult().get(0).getRoles().getOwner());
+            assertNotNull(response.getResult().get(0).getRoles().getParticipant());
+            assertEquals(true, response.getResult().get(0).getRoles().getParticipant().getCanAddParticipants().booleanValue());
+            assertEquals(true, response.getResult().get(0).getRoles().getParticipant().getCanRemoveParticipants().booleanValue());
+            assertEquals(true, response.getResult().get(0).getRoles().getParticipant().getCanSend().booleanValue());
+            assertEquals(true, response.getResult().get(0).getRoles().getOwner().getCanAddParticipants().booleanValue());
+            assertEquals(true, response.getResult().get(0).getRoles().getOwner().getCanRemoveParticipants().booleanValue());
+            assertEquals(true, response.getResult().get(0).getRoles().getOwner().getCanSend().booleanValue());
+            assertNotNull(response.getETag());
+        });
+    }
+
+    @Test
+    public void getConversationsExtended_sessionCreateInProgress() throws Exception {
+        isCreateSessionInProgress.set(true);
+        service.getConversations(true).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        assertEquals(1, service.getTaskQueue().queue.size());
+        isCreateSessionInProgress.set(false);
+        service.getTaskQueue().executePending();
+        assertEquals(0, service.getTaskQueue().queue.size());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void getConversationsExtended_noSession_shouldFail() throws Exception {
+        DataTestHelper.clearSessionData();
+        getConversationsExtended();
     }
 
     @Test
@@ -831,6 +992,7 @@ public class ServiceTest {
             assertEquals(200, response.getCode());
             assertNotNull(response.getETag());
             assertNotNull(response.getResult().getId());
+            assertNotNull(response.getResult().getEventId());
         });
     }
 
@@ -844,6 +1006,7 @@ public class ServiceTest {
             assertEquals(200, response.getCode());
             assertNotNull(response.getETag());
             assertNotNull(response.getResult().getId());
+            assertNotNull(response.getResult().getEventId());
         });
     }
 
@@ -966,6 +1129,65 @@ public class ServiceTest {
     public void queryEvents_noSession_shouldFail() throws Exception {
         DataTestHelper.clearSessionData();
         queryEvents();
+    }
+
+    @Test
+    public void queryConversationEvents() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_conversation_events_query.json", 200).addHeader("ETag", "eTag"));
+
+        service.queryConversationEvents("someId", 0L, 100).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getETag());
+
+            assertNotNull(response.getResult().getMessageRead().get(0).getEventId());
+            assertNotNull(response.getResult().getMessageRead().get(0).getName());
+            assertNotNull(response.getResult().getMessageRead().get(0).getConversationEventId());
+            assertNotNull(response.getResult().getMessageRead().get(0).getMessageId());
+            assertNotNull(response.getResult().getMessageRead().get(0).getConversationId());
+            assertNotNull(response.getResult().getMessageRead().get(0).getProfileId());
+            assertNotNull(response.getResult().getMessageRead().get(0).getTimestamp());
+
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getEventId());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getName());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getConversationEventId());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getMessageId());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getConversationId());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getProfileId());
+            assertNotNull(response.getResult().getMessageDelivered().get(0).getTimestamp());
+
+            assertNotNull(response.getResult().getMessageSent().get(0).getEventId());
+            assertNotNull(response.getResult().getMessageSent().get(0).getName());
+            assertNotNull(response.getResult().getMessageSent().get(0).getConversationEventId());
+            assertNotNull(response.getResult().getMessageSent().get(0).getMessageId());
+            assertNotNull(response.getResult().getMessageSent().get(0).getAlert().getPlatforms().getFcm().get("notification"));
+            assertNotNull(response.getResult().getMessageSent().get(0).getAlert().getPlatforms().getFcm().get("data"));
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getConversationId());
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getSentBy());
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getSentOn());
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getFromWhom().getId());
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getFromWhom().getName());
+            assertNotNull(response.getResult().getMessageSent().get(0).getContext().getFromWhom().getName());
+            assertNotNull(response.getResult().getMessageSent().get(0).getMetadata().get("key"));
+        });
+    }
+
+    @Test
+    public void queryConversationEvents_sessionCreateInProgress() {
+
+        isCreateSessionInProgress.set(true);
+        service.queryConversationEvents("someId", 0L, 100).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        assertEquals(1, service.getTaskQueue().queue.size());
+        isCreateSessionInProgress.set(false);
+        service.getTaskQueue().executePending();
+        assertEquals(0, service.getTaskQueue().queue.size());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void queryConversationEvents_noSession_shouldFail() throws Exception {
+        DataTestHelper.clearSessionData();
+        queryConversationEvents();
     }
 
     @Test
