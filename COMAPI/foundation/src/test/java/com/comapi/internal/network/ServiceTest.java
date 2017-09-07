@@ -73,6 +73,7 @@ import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1318,6 +1319,78 @@ public class ServiceTest {
     public void updatePush_noSession_shouldFail() throws Exception {
         DataTestHelper.clearSessionData();
         updatePush();
+    }
+
+    @Test
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void uploadContent_file() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_upload_content.json", 200).addHeader("ETag", "eTag"));
+
+        File file = new File(RuntimeEnvironment.application.getFilesDir(), "testFile");
+        file.setReadable(true);
+        file.createNewFile();
+
+        service.uploadContent("folder", ContentData.create(file, "mime_type")).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getETag());
+            assertEquals("id",response.getResult().getId());
+            assertEquals("folder",response.getResult().getFolder());
+            assertEquals(2662193, response.getResult().getSize().longValue());
+            assertEquals("fullURL",response.getResult().getUrl());
+            assertEquals("image/jpeg",response.getResult().getType());
+        });
+    }
+
+    @Test
+    public void uploadContent_string() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_upload_content.json", 200).addHeader("ETag", "eTag"));
+
+        service.uploadContent("folder", ContentData.create("string", "mime_type")).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getETag());
+            assertEquals("id",response.getResult().getId());
+            assertEquals("folder",response.getResult().getFolder());
+            assertEquals(2662193, response.getResult().getSize().longValue());
+            assertEquals("fullURL",response.getResult().getUrl());
+            assertEquals("image/jpeg",response.getResult().getType());
+        });
+    }
+
+    @Test
+    public void uploadContent_bytes() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_upload_content.json", 200).addHeader("ETag", "eTag"));
+
+        service.uploadContent("folder", ContentData.create(new byte[0], "mime_type")).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getETag());
+            assertEquals("id",response.getResult().getId());
+            assertEquals("folder",response.getResult().getFolder());
+            assertEquals(2662193, response.getResult().getSize().longValue());
+            assertEquals("fullURL",response.getResult().getUrl());
+            assertEquals("image/jpeg",response.getResult().getType());
+        });
+    }
+
+    @Test
+    public void uploadContent_sessionCreateInProgress() throws Exception {
+        isCreateSessionInProgress.set(true);
+        service.uploadContent("folder", ContentData.create("", "mime_type")).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        assertEquals(1, service.getTaskQueue().queue.size());
+        isCreateSessionInProgress.set(false);
+        service.getTaskQueue().executePending();
+        assertEquals(0, service.getTaskQueue().queue.size());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void uploadContent_noSession_shouldFail() throws Exception {
+        DataTestHelper.clearSessionData();
+        uploadContent_string();
     }
 
     @After

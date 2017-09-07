@@ -39,6 +39,7 @@ import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.MessagesQueryResponse;
+import com.comapi.internal.network.model.messaging.UploadContentResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -89,6 +90,18 @@ class ServiceApiWrapper extends ApiWrapper {
      */
     Observable<ComapiResult<MessageSentResponse>> doSendMessage(@NonNull final String token, @NonNull final String conversationId, @NonNull final MessageToSend message) {
         return wrapObservable(service.sendMessage(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, message).map(mapToComapiResult()));
+    }
+
+    /**
+     * Upload content data.
+     *
+     * @param token  Comapi access token.
+     * @param folder Folder name to put the file in.
+     * @param data   Content data.
+     * @return Observable emitting details of uploaded content.
+     */
+    Observable<ComapiResult<UploadContentResponse>> doUploadContent(@NonNull final String token, @NonNull final String folder, @NonNull final ContentData data) {
+        return wrapObservable(service.uploadContent(AuthManager.addAuthPrefix(token), apiSpaceId, folder, data.getBody()).map(mapToComapiResult()));
     }
 
     /**
@@ -299,7 +312,7 @@ class ServiceApiWrapper extends ApiWrapper {
     /**
      * Send information if user started or stopped typing message in a conversation.
      *
-     * @param token Comapi access token.
+     * @param token          Comapi access token.
      * @param conversationId Id of the conversation.
      * @return Observable to send 'is typing' notification.
      */

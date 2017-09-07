@@ -25,6 +25,7 @@ import android.support.annotation.Nullable;
 
 import com.comapi.internal.network.ComapiResult;
 import com.comapi.internal.network.InternalService;
+import com.comapi.internal.network.ContentData;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
@@ -37,9 +38,12 @@ import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.MessagesQueryResponse;
+import com.comapi.internal.network.model.messaging.UploadContentResponse;
 
 import java.util.List;
 import java.util.Map;
+
+import rx.Observable;
 
 /**
  * Separates access to subsets of service APIs.
@@ -267,6 +271,15 @@ public class ServiceAccessor {
          * @param callback       Callback with the result.
          */
         void sendMessage(@NonNull final String conversationId, @NonNull final String body, @Nullable Callback<ComapiResult<MessageSentResponse>> callback);
+
+        /**
+         * Upload content data. The response will return full url to the file.
+         *
+         * @param folder   Folder name to put the file in.
+         * @param data     Content data. Accepts files, byte array or base64 encoded string.
+         * @param callback Callback with the result.
+         */
+        void uploadContent(@NonNull final String folder, @NonNull final ContentData data, @Nullable Callback<ComapiResult<UploadContentResponse>> callback);
 
         /**
          * Sets statuses for sets of messages.
