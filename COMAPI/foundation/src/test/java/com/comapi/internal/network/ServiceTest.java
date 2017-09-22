@@ -328,21 +328,16 @@ public class ServiceTest {
         isCreateSessionInProgress.set(false);
 
         // Go through all 3 retries
-        MockResponse mr = new MockResponse();
-        mr.setResponseCode(401);
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_start.json", 200).addHeader("ETag", "eTag"));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_create.json", 200).addHeader("ETag", "eTag"));
-        server.enqueue(new MockResponse().setResponseCode(200));
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_start.json", 200).addHeader("ETag", "eTag"));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_create.json", 200).addHeader("ETag", "eTag"));
-        server.enqueue(new MockResponse().setResponseCode(200));
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_start.json", 200).addHeader("ETag", "eTag"));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_create.json", 200).addHeader("ETag", "eTag"));
-        server.enqueue(new MockResponse().setResponseCode(200));
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
 
         service.getProfile("profileId").toBlocking().forEach(response -> {
             assertEquals(false, response.isSuccessful());
@@ -1331,7 +1326,7 @@ public class ServiceTest {
         file.setReadable(true);
         file.createNewFile();
 
-        service.uploadContent("folder", ContentData.create(file, "mime_type")).toBlocking().forEach(response -> {
+        service.uploadContent("folder", ContentData.create(file, "mime_type", "name")).toBlocking().forEach(response -> {
             assertEquals(true, response.isSuccessful());
             assertEquals(200, response.getCode());
             assertNotNull(response.getETag());
@@ -1348,7 +1343,7 @@ public class ServiceTest {
 
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_upload_content.json", 200).addHeader("ETag", "eTag"));
 
-        service.uploadContent("folder", ContentData.create("string", "mime_type")).toBlocking().forEach(response -> {
+        service.uploadContent("folder", ContentData.create("string", "mime_type", "name")).toBlocking().forEach(response -> {
             assertEquals(true, response.isSuccessful());
             assertEquals(200, response.getCode());
             assertNotNull(response.getETag());
@@ -1365,7 +1360,7 @@ public class ServiceTest {
 
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_upload_content.json", 200).addHeader("ETag", "eTag"));
 
-        service.uploadContent("folder", ContentData.create(new byte[0], "mime_type")).toBlocking().forEach(response -> {
+        service.uploadContent("folder", ContentData.create(new byte[0], "mime_type", "name")).toBlocking().forEach(response -> {
             assertEquals(true, response.isSuccessful());
             assertEquals(200, response.getCode());
             assertNotNull(response.getETag());
@@ -1380,7 +1375,7 @@ public class ServiceTest {
     @Test
     public void uploadContent_sessionCreateInProgress() throws Exception {
         isCreateSessionInProgress.set(true);
-        service.uploadContent("folder", ContentData.create("", "mime_type")).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
+        service.uploadContent("folder", ContentData.create("", "mime_type", "name")).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
         assertEquals(1, service.getTaskQueue().queue.size());
         isCreateSessionInProgress.set(false);
         service.getTaskQueue().executePending();

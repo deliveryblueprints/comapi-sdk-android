@@ -194,15 +194,12 @@ public interface RestApi {
     /*
      * Content
      */
-
-    @Headers({"Accept: application/json"})
     @POST("/apispaces/{apiSpaceId}/content")
-    Observable<Response<UploadContentResponse>> uploadContent(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Query("folder") String folder, @Body RequestBody body);
+    Observable<Response<UploadContentResponse>> uploadContent(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Query("folder") String folder, @Header("content-filename") String name, @Body RequestBody body);
 
     /*
      * FB
      */
-
     @Headers({"Accept: application/json"})
     @POST("/apispaces/{apiSpaceId}/channels/facebook/state")
     Observable<Response<String>> createFbOptInState(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Body Object body);

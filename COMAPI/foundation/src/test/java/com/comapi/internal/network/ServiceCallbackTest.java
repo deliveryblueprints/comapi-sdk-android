@@ -362,21 +362,16 @@ public class ServiceCallbackTest {
         isCreateSessionInProgress.set(false);
 
         // Go through all 3 retries
-        MockResponse mr = new MockResponse();
-        mr.setResponseCode(401);
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_start.json", 200).addHeader("ETag", "eTag"));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_create.json", 200).addHeader("ETag", "eTag"));
-        server.enqueue(new MockResponse().setResponseCode(200));
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_start.json", 200).addHeader("ETag", "eTag"));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_create.json", 200).addHeader("ETag", "eTag"));
-        server.enqueue(new MockResponse().setResponseCode(200));
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_start.json", 200).addHeader("ETag", "eTag"));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_create.json", 200).addHeader("ETag", "eTag"));
-        server.enqueue(new MockResponse().setResponseCode(200));
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
 
         final MockCallback<ComapiResult<Map<String, Object>>> listener = new MockCallback<>();
 
@@ -1040,7 +1035,7 @@ public class ServiceCallbackTest {
 
         final MockCallback<ComapiResult<UploadContentResponse>> listener = new MockCallback<>();
 
-        service.uploadContent("folder", ContentData.create(file, "mime_type"), listener);
+        service.uploadContent("folder", ContentData.create(file, "mime_type", "name"), listener);
 
         synchronized (listener) {
             listener.wait(TIME_OUT);
@@ -1063,7 +1058,7 @@ public class ServiceCallbackTest {
 
         final MockCallback<ComapiResult<UploadContentResponse>> listener = new MockCallback<>();
 
-        service.uploadContent("folder", ContentData.create("string", "mime_type"), listener);
+        service.uploadContent("folder", ContentData.create("string", "mime_type", "name"), listener);
 
         synchronized (listener) {
             listener.wait(TIME_OUT);
@@ -1086,7 +1081,7 @@ public class ServiceCallbackTest {
 
         final MockCallback<ComapiResult<UploadContentResponse>> listener = new MockCallback<>();
 
-        service.uploadContent("folder", ContentData.create(new byte[0], "mime_type"), listener);
+        service.uploadContent("folder", ContentData.create(new byte[0], "mime_type", "name"), listener);
 
         synchronized (listener) {
             listener.wait(TIME_OUT);

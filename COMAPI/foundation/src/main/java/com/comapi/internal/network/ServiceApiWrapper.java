@@ -22,6 +22,7 @@ package com.comapi.internal.network;
 
 import android.app.Application;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.comapi.QueryBuilder;
@@ -100,8 +101,8 @@ class ServiceApiWrapper extends ApiWrapper {
      * @param data   Content data.
      * @return Observable emitting details of uploaded content.
      */
-    Observable<ComapiResult<UploadContentResponse>> doUploadContent(@NonNull final String token, @NonNull final String folder, @NonNull final ContentData data) {
-        return wrapObservable(service.uploadContent(AuthManager.addAuthPrefix(token), apiSpaceId, folder, data.getBody()).map(mapToComapiResult()));
+    Observable<ComapiResult<UploadContentResponse>> doUploadContent(@NonNull final String token, @NonNull final String folder, @Nullable final String name, @NonNull final ContentData data) {
+        return wrapObservable(service.uploadContent(AuthManager.addAuthPrefix(token), apiSpaceId, folder, name, data.getBody()).map(mapToComapiResult()));
     }
 
     /**

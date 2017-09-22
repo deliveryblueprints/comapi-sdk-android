@@ -20,6 +20,10 @@
 
 package com.comapi.internal.network;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
+
 import java.io.File;
 
 import okhttp3.MediaType;
@@ -35,6 +39,8 @@ public class ContentData {
 
     private RequestBody body;
 
+    private String name;
+
     /**
      * Create data object to send from a file.
      *
@@ -42,8 +48,8 @@ public class ContentData {
      * @param type Mime type of the data.
      * @return Data object to send.
      */
-    public static ContentData create(File data, String type) {
-        return new ContentData(RequestBody.create(MediaType.parse(type), data));
+    public static ContentData create(@NonNull File data, @NonNull String type, @Nullable String name) {
+        return new ContentData(RequestBody.create(MediaType.parse(type), data), TextUtils.isEmpty(name) ? data.getName() : name);
     }
 
     /**
@@ -53,8 +59,8 @@ public class ContentData {
      * @param type Mime type of the data.
      * @return Data object to send.
      */
-    public static ContentData create(byte[] data, String type) {
-        return new ContentData(RequestBody.create(MediaType.parse(type), data));
+    public static ContentData create(byte[] data, String type, @Nullable String name) {
+        return new ContentData(RequestBody.create(MediaType.parse(type), data), name);
     }
 
     /**
@@ -64,12 +70,13 @@ public class ContentData {
      * @param type Mime type of the data.
      * @return Data object to send.
      */
-    public static ContentData create(String data, String type) {
-        return new ContentData(RequestBody.create(MediaType.parse(type), data));
+    public static ContentData create(String data, String type, @Nullable String name) {
+        return new ContentData(RequestBody.create(MediaType.parse(type), data), name);
     }
 
-    private ContentData(RequestBody body) {
+    private ContentData(RequestBody body, String name) {
         this.body = body;
+        this.name = name;
     }
 
     /**
@@ -79,5 +86,14 @@ public class ContentData {
      */
     RequestBody getBody() {
         return body;
+    }
+
+    /**
+     * Get name for the content.
+     *
+     * @return Content name.
+     */
+    public String getName() {
+        return name;
     }
 }

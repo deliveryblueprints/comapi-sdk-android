@@ -245,7 +245,7 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
                 }
                 sub.onNext(token);
                 sub.onCompleted();
-            }).concatMap(token -> service.updatePushToken(AuthManager.addAuthPrefix(session.getAccessToken()), apiSpaceId, session.getSessionId(), new PushConfig(packageName, token)).map(mapToComapiResult()))
+            }).concatMap(token -> sessionController.doUpdatePush(session, token).map(mapToComapiResult()))
                     .map(result -> new Pair<>(session, result)));
         } else {
             return Observable.error(getSessionStateErrorDescription());
@@ -770,7 +770,7 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
         } else if (TextUtils.isEmpty(token)) {
             return Observable.error(getSessionStateErrorDescription());
         } else {
-            return doUploadContent(token, folder, data);
+            return doUploadContent(token, folder, data.getName(), data);
         }
     }
 

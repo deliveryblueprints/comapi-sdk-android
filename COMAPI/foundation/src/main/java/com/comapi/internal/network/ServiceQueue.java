@@ -123,7 +123,7 @@ class ServiceQueue extends ServiceApiWrapper {
                         @Override
                         public Observable<ComapiResult<UploadContentResponse>> call(String token) {
                             log.d("doUploadContent called from the service queue. " + queue.size() + " requests still pending.");
-                            return doUploadContent(token, folder, body);
+                            return doUploadContent(token, folder, body.getName(), body);
                         }
                     })
                     .doOnCompleted(this::executePending);
