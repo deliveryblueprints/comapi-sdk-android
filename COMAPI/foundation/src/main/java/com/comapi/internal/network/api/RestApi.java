@@ -25,6 +25,7 @@ import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.comapi.internal.network.model.conversation.ConversationUpdate;
 import com.comapi.internal.network.model.conversation.Conversation;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
+import com.comapi.internal.network.model.messaging.UploadContentResponse;
 import com.comapi.internal.network.model.session.PushConfig;
 import com.comapi.internal.network.model.session.SessionStartResponse;
 import com.google.gson.JsonObject;
@@ -39,6 +40,7 @@ import com.comapi.internal.network.model.session.SessionCreateResponse;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.RequestBody;
 import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -190,9 +192,14 @@ public interface RestApi {
     Observable<Response<List<JsonObject>>> queryEvents(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Path("conversationId") String conversationId, @Query("from") final Long from, @Query("limit") final Integer limit);
 
     /*
+     * Content
+     */
+    @POST("/apispaces/{apiSpaceId}/content")
+    Observable<Response<UploadContentResponse>> uploadContent(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Query("folder") String folder, @Header("content-filename") String name, @Body RequestBody body);
+
+    /*
      * FB
      */
-
     @Headers({"Accept: application/json"})
     @POST("/apispaces/{apiSpaceId}/channels/facebook/state")
     Observable<Response<String>> createFbOptInState(@Header("Authorization") String authorization, @Path("apiSpaceId") String apiSpaceId, @Body Object body);

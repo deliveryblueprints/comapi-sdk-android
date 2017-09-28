@@ -351,8 +351,16 @@ public class SessionController extends ApiWrapper {
             }
             sub.onNext(token);
             sub.onCompleted();
-        }).concatMap(token -> service.updatePushToken(AuthManager.addAuthPrefix(session.getAccessToken()), apiSpaceId, session.getSessionId(), new PushConfig(packageName, token)))
+        }).concatMap(token -> doUpdatePush(session, token))
                 .map(result -> new Pair<>(session, result));
+    }
+
+    Observable<Response<Void>> doUpdatePush(final SessionData session, final String token) {
+        if (!TextUtils.isEmpty(token)) {
+            return service.updatePushToken(AuthManager.addAuthPrefix(session.getAccessToken()), apiSpaceId, session.getSessionId(), new PushConfig(packageName, token));
+        } else {
+            return Observable.fromCallable(() -> null);
+        }
     }
 
     /**
@@ -392,7 +400,7 @@ public class SessionController extends ApiWrapper {
                 .concatMap(newSession ->
                         Observable.zip(
                                 Observable.just(newSession),
-                                service.updatePushToken(AuthManager.addAuthPrefix(newSession.getAccessToken()), apiSpaceId, newSession.getSessionId(), new PushConfig(packageName, dataMgr.getDeviceDAO().device().getPushToken())),
+                                doUpdatePush(newSession, dataMgr.getDeviceDAO().device().getPushToken()),
                                 (session, voidResult) -> session));
     }
 

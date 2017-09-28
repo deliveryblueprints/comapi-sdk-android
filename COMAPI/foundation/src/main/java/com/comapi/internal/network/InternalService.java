@@ -55,6 +55,7 @@ import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.MessagesQueryResponse;
+import com.comapi.internal.network.model.messaging.UploadContentResponse;
 import com.comapi.internal.network.model.session.PushConfig;
 import com.comapi.internal.network.sockets.SocketController;
 import com.comapi.internal.network.sockets.SocketEventListener;
@@ -244,7 +245,7 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
                 }
                 sub.onNext(token);
                 sub.onCompleted();
-            }).concatMap(token -> service.updatePushToken(AuthManager.addAuthPrefix(session.getAccessToken()), apiSpaceId, session.getSessionId(), new PushConfig(packageName, token)).map(mapToComapiResult()))
+            }).concatMap(token -> sessionController.doUpdatePush(session, token).map(mapToComapiResult()))
                     .map(result -> new Pair<>(session, result)));
         } else {
             return Observable.error(getSessionStateErrorDescription());
@@ -740,6 +741,37 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
     public Observable<ComapiResult<MessageSentResponse>> sendMessage(@NonNull final String conversationId, @NonNull final String body) {
         SessionData session = dataMgr.getSessionDAO().session();
         return sendMessage(conversationId, APIHelper.createMessage(conversationId, body, session != null ? session.getProfileId() : null));
+    }
+
+    /**
+     * Upload content data.
+     *
+     * @param folder   Folder name to put the file in.
+     * @param data     Content data.
+     * @param callback Callback with the details of uploaded content.
+     */
+    public void uploadContent(@NonNull final String folder, @NonNull final ContentData data, @Nullable Callback<ComapiResult<UploadContentResponse>> callback) {
+        adapter.adapt(uploadContent(folder, data), callback);
+    }
+
+    /**
+     * Upload content data.
+     *
+     * @param folder Folder name to put the file in.
+     * @param data   Content data.
+     * @return Observable emitting details of uploaded content.
+     */
+    public Observable<ComapiResult<UploadContentResponse>> uploadContent(@NonNull final String folder, @NonNull final ContentData data) {
+
+        final String token = getToken();
+
+        if (sessionController.isCreatingSession()) {
+            return getTaskQueue().queueUploadContent(folder, data);
+        } else if (TextUtils.isEmpty(token)) {
+            return Observable.error(getSessionStateErrorDescription());
+        } else {
+            return doUploadContent(token, folder, data.getName(), data);
+        }
     }
 
     /**
