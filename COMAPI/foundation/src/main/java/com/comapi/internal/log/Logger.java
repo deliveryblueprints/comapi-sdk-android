@@ -30,13 +30,13 @@ import android.support.annotation.NonNull;
  */
 public class Logger {
 
-    private final String TAG;
+    private final String tag;
 
     private final LogManager logMgr;
 
     public Logger(@NonNull LogManager logMgr, @NonNull String tag) {
         this.logMgr = logMgr;
-        TAG = tag;
+        this.tag = tag;
     }
 
     /**
@@ -45,7 +45,7 @@ public class Logger {
      * @param msg Message to be logged
      */
     public void i(final String msg) {
-        logMgr.log(TAG, LogLevelConst.INFO, msg, null);
+        logMgr.log(tag, LogLevelConst.INFO, msg, null);
     }
 
     /**
@@ -54,7 +54,7 @@ public class Logger {
      * @param msg Message to be logged
      */
     public void w(final String msg) {
-        logMgr.log(TAG, LogLevelConst.WARNING, msg, null);
+        logMgr.log(tag, LogLevelConst.WARNING, msg, null);
     }
 
     /**
@@ -63,7 +63,7 @@ public class Logger {
      * @param msg Message to be logged
      */
     public void e(final String msg) {
-        logMgr.log(TAG, LogLevelConst.ERROR, msg, null);
+        logMgr.log(tag, LogLevelConst.ERROR, msg, null);
     }
 
     /**
@@ -73,7 +73,7 @@ public class Logger {
      * @param exception Optional exception to be logged.
      */
     public void f(final String msg, Throwable exception) {
-        logMgr.log(TAG, LogLevelConst.FATAL, msg, exception);
+        logMgr.log(tag, LogLevelConst.FATAL, msg, exception);
     }
 
     /**
@@ -82,7 +82,16 @@ public class Logger {
      * @param msg Message to be logged
      */
     public void d(final String msg) {
-        logMgr.log(TAG, LogLevelConst.DEBUG, msg, null);
+        logMgr.log(tag, LogLevelConst.DEBUG, msg, null);
     }
 
+    /**
+     * Clone Logger instance with additional tag suffix to include with every log entry. Eg. with SDK name and version.
+     *
+     * @param tagSuffix Tag suffix to include with every log entry.
+     * @return New logger instance.
+     */
+    public Logger clone(@NonNull final String tagSuffix) {
+        return new Logger(logMgr, tag + "|" + tagSuffix);
+    }
 }

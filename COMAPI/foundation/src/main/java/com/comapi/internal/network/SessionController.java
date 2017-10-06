@@ -285,11 +285,10 @@ public class SessionController extends ApiWrapper {
                             .observeOn(Schedulers.io())
                             .doOnNext(sessionCreateResponse -> log.i("Starting session successful: " + sessionCreateResponse.toString()))
                     ).doOnNext(response -> {
-                        log.i("Starting session has been completed successfully.");
                         sessionCreateManager.setStop();
                     })
                     .doOnError((e) -> {
-                        log.f("Starting session has been completed with error. ", e);
+                        log.f("Error starting session.", e);
                         sessionCreateManager.setStop();
                     });
         } else {

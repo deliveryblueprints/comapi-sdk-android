@@ -20,7 +20,6 @@
 
 package com.comapi.internal.log;
 
-import com.comapi.internal.Parser;
 import com.comapi.internal.helpers.DateHelper;
 
 /**
@@ -31,37 +30,20 @@ import com.comapi.internal.helpers.DateHelper;
  */
 class FormatterFileLog extends Formatter {
 
-    String formatMessage(int msgLogLevel, String msg, Throwable exception) {
-        LogEntry entry = new LogEntry(msgLogLevel, msg, exception);
-        Parser gson = new Parser();
-        return gson.toJson(entry) + "\n";
-    }
-
     /**
-     * Class representing a log entry as a json.
+     * Format log data into a log entry String.
+     *
+     * @param msgLogLevel Log level of an entry.
+     * @param tag         Tag with SDK and version details.
+     * @param msg         Log message.
+     * @param exception   Exception with a stach
+     * @return Formatted log entry.
      */
-    private class LogEntry {
-
-        final String time;
-
-        final String level;
-
-        final String msg;
-
-        final String stacktrace;
-
-        /**
-         * Constructor for non-debug mode.
-         *
-         * @param msgLogLevel Level of the log message.
-         * @param msg         Log message.
-         * @param exception   Optional exception.
-         */
-        LogEntry(final int msgLogLevel, final String msg, final Throwable exception) {
-            time = DateHelper.getCurrentUTC();
-            level = getLevelTag(msgLogLevel);
-            this.msg = msg;
-            stacktrace = getStackTrace(exception);
+    String formatMessage(int msgLogLevel, String tag, String msg, Throwable exception) {
+        if (exception != null) {
+            return DateHelper.getUTC(System.currentTimeMillis()) + getLevelTag(msgLogLevel) + "[" + tag + "] " + msg + "\n" + getStackTrace(exception) + "\n";
+        } else {
+            return DateHelper.getUTC(System.currentTimeMillis()) + getLevelTag(msgLogLevel) + "[" + tag + "] " + msg + "\n";
         }
     }
 

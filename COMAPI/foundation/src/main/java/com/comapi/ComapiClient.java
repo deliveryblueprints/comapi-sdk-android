@@ -26,6 +26,8 @@ import android.support.annotation.NonNull;
 
 import com.comapi.internal.CallbackAdapter;
 
+import java.io.File;
+
 /**
  * Comapi Client implementation for foundation SDK. Handles initialisation and stores all internal objects.
  *
@@ -89,6 +91,16 @@ public class ComapiClient extends BaseClient<ServiceAccessor> {
      */
     public void getLogs(Callback<String> callback) {
         adapter.adapt(super.getLogs(), callback);
+    }
+
+    /**
+     * Gets the content of internal log files merged into provided file.
+     *
+     * @param file     File to merge internal logs into.
+     * @param callback Callback with a same file this time containing all the internal logs merged into.
+     */
+    public void copyLogs(@NonNull File file, Callback<File> callback) {
+        adapter.adapt(super.copyLogs(file), callback);
     }
 
     @Override
