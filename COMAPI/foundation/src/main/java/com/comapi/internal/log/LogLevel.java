@@ -65,6 +65,11 @@ public enum LogLevel {
         this.value = value;
     }
 
+    /**
+     * Gets log level value defined as this enum.
+     *
+     * @return Integer representation of this enum.
+     */
     public int getValue() {
         return value;
     }

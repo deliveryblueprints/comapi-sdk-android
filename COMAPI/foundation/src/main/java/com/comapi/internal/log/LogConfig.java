@@ -34,12 +34,18 @@ public class LogConfig {
 
     private LogLevel networkLevel;
 
+    /**
+     * Default constructor.
+     */
     public LogConfig() {
         consoleLevel = LogLevel.WARNING;
         fileLevel = LogLevel.WARNING;
         networkLevel = LogLevel.WARNING;
     }
 
+    /**
+     * Convenience constructor to choose between most common log settings - debug and production (up to warnings).
+     */
     private LogConfig(boolean isDebug) {
         if (isDebug) {
             consoleLevel = LogLevel.DEBUG;
@@ -52,36 +58,79 @@ public class LogConfig {
         }
     }
 
+    /**
+     * Convenience method to create debug log settings. All levels set to DEBUG.
+     *
+     * @return Debug log settings instance.
+     */
     public static LogConfig getDebugConfig() {
         return new LogConfig(true);
     }
 
+    /**
+     * Convenience method to create production log settings. All levels set to WARNING.
+     *
+     * @return Production log settings instance.
+     */
     public static LogConfig getProductionConfig() {
         return new LogConfig(false);
     }
 
+    /**
+     * Gets level of console logs. Only logs up to this level will be displayed in a console.
+     *
+     * @return Console logs level.
+     */
     public LogLevel getConsoleLevel() {
         return consoleLevel;
     }
 
+    /**
+     * Set log level for the console logs.
+     *
+     * @param consoleLevel Log level for the console logs.
+     * @return Log configuration.
+     */
     public LogConfig setConsoleLevel(LogLevel consoleLevel) {
         this.consoleLevel = consoleLevel;
         return this;
     }
 
+    /**
+     * Gets level of console logs. Only logs up to this level will be displayed in a console.
+     *
+     * @return Console logs level.
+     */
     public LogLevel getFileLevel() {
         return fileLevel;
     }
 
+    /**
+     * Set log level for the file logs.
+     *
+     * @param fileLevel Log level for the console logs.
+     * @return Log configuration.
+     */
     public LogConfig setFileLevel(LogLevel fileLevel) {
         this.fileLevel = fileLevel;
         return this;
     }
 
+    /**
+     * Gets level of logs for network communication. SDK will recognise only DEBUG level in which case
+     *
+     * @return Console logs level.
+     */
     public LogLevel getNetworkLevel() {
         return networkLevel;
     }
 
+    /**
+     * Set log level for the console logs.
+     *
+     * @param networkLevel Log level for the console logs.
+     * @return Log configuration.
+     */
     public LogConfig setNetworkLevel(LogLevel networkLevel) {
         this.networkLevel = networkLevel;
         return this;

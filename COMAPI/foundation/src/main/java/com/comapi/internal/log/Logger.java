@@ -34,6 +34,12 @@ public class Logger {
 
     private final LogManager logMgr;
 
+    /**
+     * Recommended constructor.
+     *
+     * @param logMgr Log manager instance.
+     * @param tag Tag to be placed as a prefix of all logs.
+     */
     public Logger(@NonNull LogManager logMgr, @NonNull String tag) {
         this.logMgr = logMgr;
         this.tag = tag;
