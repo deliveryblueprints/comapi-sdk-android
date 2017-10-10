@@ -133,8 +133,8 @@ public class SessionControllerTest {
         //InternalService service = new InternalService(dataMgr, pushMgr, "apiSpace", "packageName", log);
         sessionMockState = new AtomicInteger(GlobalState.INITIALISED);
         isSessionCreating = new AtomicBoolean();
-        ServiceQueue queue = new ServiceQueue(application, "api_space", dataMgr, log);
-        sessionController = new SessionController(application, new SessionCreateManager(isSessionCreating), pushMgr, sessionMockState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), log, queue.getTaskQueue(), true, new StateListener() {
+        ServiceQueue queue = new ServiceQueue("api_space", dataMgr, log);
+        sessionController = new SessionController(new SessionCreateManager(isSessionCreating), pushMgr, sessionMockState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), log, queue.getTaskQueue(), true, new StateListener() {
         });
         sessionController.setSocketController(new SocketController(dataMgr, null, new Logger(new LogManager(), ""), new URI("ws://host"), null));
     }
@@ -219,7 +219,7 @@ public class SessionControllerTest {
     @Test
     public void reAuthenticate_automatically() throws Throwable {
 
-        SessionController sessionController = new SessionController(application, new SessionCreateManager(new AtomicBoolean()), pushMgr, new AtomicInteger(), dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, false, new StateListener() {
+        SessionController sessionController = new SessionController(new SessionCreateManager(new AtomicBoolean()), pushMgr, new AtomicInteger(), dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, false, new StateListener() {
         }) {
             @Override
             protected Observable<SessionData> reAuthenticate() {

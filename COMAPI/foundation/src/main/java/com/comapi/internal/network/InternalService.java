@@ -56,7 +56,6 @@ import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.MessagesQueryResponse;
 import com.comapi.internal.network.model.messaging.UploadContentResponse;
-import com.comapi.internal.network.model.session.PushConfig;
 import com.comapi.internal.network.sockets.SocketController;
 import com.comapi.internal.network.sockets.SocketEventListener;
 import com.comapi.internal.push.PushManager;
@@ -97,7 +96,6 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
     /**
      * Recommended constructor.
      *
-     * @param application Application instance.
      * @param adapter     Observables to callbacks adapter.
      * @param dataMgr     Internal data storage access.
      * @param pushMgr     Push messaging manager.
@@ -105,8 +103,8 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      * @param packageName App package name.
      * @param log         Internal logger.
      */
-    public InternalService(Application application, @NonNull CallbackAdapter adapter, @NonNull final DataManager dataMgr, PushManager pushMgr, String apiSpaceId, @NonNull final String packageName, @NonNull final Logger log) {
-        super(application, apiSpaceId, dataMgr, log);
+    public InternalService(@NonNull CallbackAdapter adapter, @NonNull final DataManager dataMgr, PushManager pushMgr, String apiSpaceId, @NonNull final String packageName, @NonNull final Logger log) {
+        super(apiSpaceId, dataMgr, log);
         this.adapter = adapter;
         this.pushMgr = pushMgr;
         this.packageName = packageName;
@@ -137,7 +135,6 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
     /**
      * Initialise controller for creating and managing session.
      *
-     * @param application          Application instance.
      * @param sessionCreateManager Manager for the process of creation of a new session
      * @param pushMgr              Push messaging manager.
      * @param state                SDK global state.
@@ -148,14 +145,15 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      * @param sessionListener      Listener for new sessions.
      * @return Controller for creating and managing session.
      */
-    public SessionController initialiseSessionController(Application application,
-                                                         @NonNull SessionCreateManager sessionCreateManager, PushManager pushMgr,
-                                                         @NonNull AtomicInteger state, @NonNull ComapiAuthenticator auth,
+    public SessionController initialiseSessionController(@NonNull SessionCreateManager sessionCreateManager,
+                                                         @NonNull PushManager pushMgr,
+                                                         @NonNull AtomicInteger state,
+                                                         @NonNull ComapiAuthenticator auth,
                                                          @NonNull RestApi restApi,
                                                          @NonNull Handler handler,
                                                          boolean fcmEnabled, @NonNull
                                                          final ISessionListener sessionListener) {
-        sessionController = new SessionController(application, sessionCreateManager, pushMgr, state, dataMgr, auth, restApi, packageName, handler, log, getTaskQueue(), fcmEnabled, sessionListener);
+        sessionController = new SessionController(sessionCreateManager, pushMgr, state, dataMgr, auth, restApi, packageName, handler, log, getTaskQueue(), fcmEnabled, sessionListener);
         return sessionController;
     }
 

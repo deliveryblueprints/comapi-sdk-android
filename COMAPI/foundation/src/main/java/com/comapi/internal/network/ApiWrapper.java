@@ -20,10 +20,9 @@
 
 package com.comapi.internal.network;
 
-import android.app.Application;
-import android.content.Context;
+import android.support.annotation.NonNull;
 
-import java.lang.ref.WeakReference;
+import com.comapi.internal.log.Logger;
 
 import rx.Observable;
 import rx.schedulers.Schedulers;
@@ -36,17 +35,6 @@ import rx.schedulers.Schedulers;
  */
 class ApiWrapper {
 
-    private WeakReference<Context> appContextWeakRef;
-
-    /**
-     * Recommended constructor.
-     *
-     * @param application Application instance.
-     */
-    ApiWrapper(Application application) {
-        appContextWeakRef = new WeakReference<>(application.getApplicationContext());
-    }
-
     /**
      * Sets schedulers for API calls observables.
      *
@@ -56,5 +44,57 @@ class ApiWrapper {
      */
     <E> Observable<E> wrapObservable(Observable<E> obs) {
         return obs.subscribeOn(Schedulers.io()).observeOn(Schedulers.io());
+    }
+
+    /**
+     * Sets schedulers for API calls observables and adds logging.
+     *
+     * @param obs Observable to set schedulers for.
+     * @param log Logger instance.
+     * @param <E> Class of the service call result.
+     * @return Observable for API call.
+     */
+    <E> Observable<E> wrapObservable(@NonNull Observable<E> obs, @NonNull Logger log, final String msg) {
+        return obs.subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .doOnNext(r -> log(log, (ComapiResult) r, msg))
+                .doOnError(t -> log(log, t, msg));
+    }
+
+    /**
+     * Add logging to observable.
+     *
+     * @param obs Observable to add logging for.
+     * @param log Logger instance.
+     * @param msg Message with which the log should start with.
+     * @param <E> Class of the service call result.
+     * @return Observable for API call.
+     */
+    <E> Observable<E> addLogging(@NonNull Observable<E> obs, @NonNull Logger log, final String msg) {
+        return obs.doOnNext(r -> log(log, (ComapiResult) r, msg))
+                .doOnError(t -> log(log, t, msg));
+    }
+
+    /**
+     * Log comapi result details.
+     *
+     * @param log Logger instance.
+     * @param r   Service call result.
+     * @param msg Message with which the log should start with.
+     */
+    private void log(@NonNull Logger log, @NonNull ComapiResult r, String msg) {
+        if (!r.isSuccessful()) {
+            log.e(msg + ". Error calling services" + " (" + r.getCode() + "). " + r.getMessage() + ". " + r.getErrorBody());
+        }
+    }
+
+    /**
+     * Log exception details.
+     *
+     * @param log Logger instance.
+     * @param t   Throwable with error details.
+     * @param msg Message with which the log should start with.
+     */
+    private void log(@NonNull Logger log, @NonNull Throwable t, String msg) {
+        log.e(msg + ". Error calling services. " + t.getLocalizedMessage());
     }
 }

@@ -172,7 +172,7 @@ public class SocketEventDispatcher implements SocketMessageListener {
      *
      * @param event Event to dispatch.
      */
-    void onMessageDelivered(MessageDeliveredEvent event) {
+    private void onMessageDelivered(MessageDeliveredEvent event) {
         handler.post(() -> listener.onMessageDelivered(event));
         log("Event published " + event.toString());
     }
@@ -182,7 +182,7 @@ public class SocketEventDispatcher implements SocketMessageListener {
      *
      * @param event Event to dispatch.
      */
-    void onMessageRead(MessageReadEvent event) {
+    private void onMessageRead(MessageReadEvent event) {
         handler.post(() -> listener.onMessageRead(event));
         log("Event published " + event.toString());
     }
@@ -257,7 +257,7 @@ public class SocketEventDispatcher implements SocketMessageListener {
         log("Event published " + event.toString());
     }
 
-    void log(String message) {
+    private void log(String message) {
         if (log != null) {
             log.d(message);
         }

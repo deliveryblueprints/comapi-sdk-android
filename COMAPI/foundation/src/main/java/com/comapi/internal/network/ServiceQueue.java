@@ -20,7 +20,6 @@
 
 package com.comapi.internal.network;
 
-import android.app.Application;
 import android.support.annotation.NonNull;
 
 import com.comapi.internal.data.DataManager;
@@ -65,13 +64,12 @@ class ServiceQueue extends ServiceApiWrapper {
     /**
      * Recommended constructor.
      *
-     * @param application Application instance.
      * @param apiSpaceId  Comapi Api Space in which SDK operates.
      * @param dataMgr     Manager for internal data storage.
      * @param log         Internal logger.
      */
-    ServiceQueue(Application application, String apiSpaceId, DataManager dataMgr, Logger log) {
-        super(application, apiSpaceId);
+    ServiceQueue(@NonNull String apiSpaceId, @NonNull  DataManager dataMgr, @NonNull  Logger log) {
+        super(apiSpaceId, log);
         this.dataMgr = dataMgr;
         this.log = log;
         taskQueue = new TaskQueue();

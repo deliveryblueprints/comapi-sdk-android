@@ -93,12 +93,8 @@ public class DataManager {
      * Log basic information about initialisation environment.
      */
     private void logInfo(@NonNull final Logger log) {
-        log.i("Comapi device ID = " + deviceDAO.device().getDeviceId());
-        final String fcmId = deviceDAO.device().getInstanceId();
-        if (!TextUtils.isEmpty(fcmId)) {
-            log.i("Firebase instance ID has been set.");
-            log.d("Firebase ID = " + fcmId);
-        }
         log.i("App ver. = " + deviceDAO.device().getAppVer());
+        log.i("Comapi device ID = " + deviceDAO.device().getDeviceId());
+        log.d("Firebase ID = " + deviceDAO.device().getInstanceId());
     }
 }

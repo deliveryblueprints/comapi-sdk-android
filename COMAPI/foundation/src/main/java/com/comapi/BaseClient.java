@@ -208,9 +208,9 @@ public abstract class BaseClient<T> implements IClient<T> {
                 }
 
                 //services
-                service = new InternalService(application, adapter, dataMgr, pushMgr, config.getApiSpaceId(), application.getPackageName(), log);
+                service = new InternalService(adapter, dataMgr, pushMgr, config.getApiSpaceId(), application.getPackageName(), log);
                 RestApi restApi = service.initialiseRestClient(logConfig.getNetworkLevel().getValue(), baseURIs);
-                SessionController sessionController = service.initialiseSessionController(application,
+                SessionController sessionController = service.initialiseSessionController(
                         new SessionCreateManager(new AtomicBoolean()),
                         pushMgr,
                         state,
