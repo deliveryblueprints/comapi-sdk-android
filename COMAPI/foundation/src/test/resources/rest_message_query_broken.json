@@ -1,0 +1,190 @@
+{
+  "latestEventId": 38,
+  "earliestEventId": 0,
+  "messages": [
+    {
+      "sentEventId":38,
+      "metadata": {
+        "key": "value"
+      },
+      "context": {
+        "from": {
+          "id": "userA",
+          "name": "userA"
+        },
+        "conversationId": "someId",
+        "sentBy": "userA",
+        "sentOn": "2016-10-21T14:41:29.122Z"
+      },
+      "parts": [
+        {
+          "data": "some message",
+          "name": "body",
+          "size": 12,
+          "type": "text/plain"
+        }
+      ],
+      "statusUpdates": {
+        "userB": {
+          "status": "unknown",
+          "on": "2016-10-21T14:51:13.073Z"
+        }
+      }
+    },
+    {
+      "id": "a36c8c12-esgb-4280-bdd7-60e0d0cf20ab",
+      "sentEventId":33,
+      "metadata": {
+        "key": "value"
+      },
+      "parts": [
+        {
+          "data": "some message",
+          "name": "body",
+          "size": 12,
+          "type": "text/plain"
+        }
+      ],
+      "statusUpdates": {
+        "userB": {
+          "status": "read",
+          "on": "2016-10-21T14:51:13.073Z"
+        }
+      }
+    },
+    {
+      "id": "a36c8c12-ebbb-4280-bdd7-60e0d0cf20ab",
+      "metadata": {
+        "key": "value"
+      },
+      "context": {
+        "from": {
+          "id": "userA",
+          "name": "userA"
+        },
+        "conversationId": "comeId",
+        "sentBy": "userA",
+        "sentOn": "2016-10-21T14:40:38.158Z"
+      },
+      "parts": [
+        {
+          "data": "some message",
+          "name": "body",
+          "size": 12,
+          "type": "text/plain",
+          "url": "some url"
+        }
+      ],
+      "statusUpdates": {
+        "userB": {
+          "status": "read",
+          "on": "2016-10-21T14:50:19.978Z"
+        }
+      }
+    },
+    {
+      "id": "a36c8c12-ebbb-4280-bdd7-60e0d0c62gab",
+      "sentEventId":37,
+      "context": {
+        "from": {
+          "id": "userA",
+          "name": "userA"
+        },
+        "conversationId": "comeId",
+        "sentBy": "userA",
+        "sentOn": "2016-10-21T14:40:38.158Z"
+      },
+      "parts": [
+        {
+          "data": "some message",
+          "name": "body",
+          "size": 12,
+          "type": "text/plain",
+          "url": "some url"
+        }
+      ],
+      "statusUpdates": {
+        "userB": {
+          "status": "read",
+          "on": "2016-10-21T14:50:19.978Z"
+        }
+      }
+    },
+    {
+      "id": "a36c8c12-ebbb-4280-bdd7-60e0w0c620ab",
+      "sentEventId":36,
+      "metadata": {
+        "key": "value"
+      },
+      "context": {
+        "conversationId": "comeId",
+        "sentBy": "userA",
+        "sentOn": "2016-10-21T14:40:38.158Z"
+      },
+      "parts": [
+        {
+          "data": "some message",
+          "name": "body",
+          "size": 12,
+          "type": "text/plain",
+          "url": "some url"
+        }
+      ],
+      "statusUpdates": {
+        "userB": {
+          "status": "read",
+          "on": "2016-10-21T14:50:19.978Z"
+        }
+      }
+    },
+    {
+      "id": "a36c8c12-ebbb-4280-bdd7-60e0d0c620ab",
+      "sentEventId":35,
+      "metadata": {
+        "key": "value"
+      },
+      "context": {
+        "from": {
+          "id": "userA",
+          "name": "userA"
+        },
+        "conversationId": "comeId",
+        "sentBy": "userA",
+        "sentOn": "2016-10-21T14:40:38.158Z"
+      },
+      "statusUpdates": {
+        "userB": {
+          "status": "read",
+          "on": "2016-10-21T14:50:19.978Z"
+        }
+      }
+    },
+    {
+      "id": "a36c8c12-ebbb-4280-bdd7-60exzcd0c620ab",
+      "sentEventId":34,
+      "metadata": {
+        "key": "value"
+      },
+      "context": {
+        "from": {
+          "id": "userA",
+          "name": "userA"
+        },
+        "conversationId": "comeId",
+        "sentBy": "userA",
+        "sentOn": "2016-10-21T14:40:38.158Z"
+      },
+      "parts": [
+        {
+          "data": "some message",
+          "name": "body",
+          "size": 12,
+          "type": "text/plain",
+          "url": "some url"
+        }
+      ]
+    }
+  ],
+  "orphanedEvents": [
+  ]
+}

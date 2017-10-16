@@ -23,6 +23,8 @@ package com.comapi.internal.log;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import java.io.File;
+
 import rx.Observable;
 
 /**
@@ -62,19 +64,26 @@ public class LogManager {
     }
 
     /**
+     * Gets the content of internal log files.
+     */
+    public Observable<File> copyLogs(@NonNull File file) {
+        return aFile != null ? aFile.mergeLogs(file) : Observable.just(null);
+    }
+
+    /**
      * Logs message using defined appender.
      *
-     * @param clazz     Name of the class from the which the log originate.
+     * @param tag       Tag with SDKs and versions info.
      * @param logLevel  Level of the log message.
      * @param msg       Message to be logged.
      * @param exception Optional exception to extract the stacktrace.
      */
-    public void log(final String clazz, final int logLevel, final String msg, final Throwable exception) {
+    public void log(final String tag, final int logLevel, final String msg, final Throwable exception) {
         if (aConsole != null) {
-            aConsole.appendLog(clazz, logLevel, msg, exception);
+            aConsole.appendLog(tag, logLevel, msg, exception);
         }
         if (aFile != null) {
-            aFile.appendLog(clazz, logLevel, msg, exception);
+            aFile.appendLog(tag, logLevel, msg, exception);
         }
     }
 }

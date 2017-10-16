@@ -56,6 +56,7 @@ import com.comapi.internal.network.model.events.conversation.message.MessageDeli
 import com.comapi.internal.network.model.events.conversation.message.MessageReadEvent;
 import com.comapi.internal.network.model.events.conversation.message.MessageSentEvent;
 import com.comapi.internal.network.model.messaging.Alert;
+import com.comapi.internal.network.model.messaging.MessageReceived;
 import com.comapi.internal.network.model.messaging.MessageStatus;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.OrphanedEvent;
@@ -157,12 +158,12 @@ public class ServiceTest {
             }
         }, null);
 
-        service = new InternalService(application, new CallbackAdapter(), dataMgr, pushMgr, API_SPACE_ID, "packageName", log);
+        service = new InternalService(new CallbackAdapter(), dataMgr, pushMgr, API_SPACE_ID, "packageName", log);
 
         restApi = service.initialiseRestClient(LogLevel.DEBUG.getValue(), baseURIs);
 
         isCreateSessionInProgress = new AtomicBoolean();
-        sessionController = service.initialiseSessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), true, new StateListener() {
+        sessionController = service.initialiseSessionController(new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), true, new StateListener() {
         });
         sessionController.setSocketController(new SocketController(dataMgr, new SocketEventListener() {
             @Override
@@ -316,7 +317,7 @@ public class ServiceTest {
     @Test
     public void getProfile_unauthorised_retry3times_shouldFail() throws Exception {
 
-        sessionController = new SessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, true, new StateListener() {
+        sessionController = new SessionController(new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, true, new StateListener() {
         }) {
             @Override
             protected Observable<SessionData> reAuthenticate() {
@@ -1200,26 +1201,52 @@ public class ServiceTest {
             assertEquals(0, response.getResult().getEarliestEventId());
             assertEquals(true, response.getResult().getLatestEventId() > 0);
 
-            assertNotNull(response.getResult().getMessages().get(0).getMessageId());
-            assertNotNull(response.getResult().getMessages().get(0).getConversationId());
-            assertNotNull(response.getResult().getMessages().get(0).getFromWhom().getId());
-            assertNotNull(response.getResult().getMessages().get(0).getFromWhom().getName());
-            assertNotNull(response.getResult().getMessages().get(0).getSentOn());
-            assertNotNull(response.getResult().getMessages().get(0).getSentBy());
-            assertNotNull(response.getResult().getMessages().get(0).getMetadata().get("key"));
-            assertNotNull(response.getResult().getMessages().get(0).getStatusUpdate().get("userB").getStatus());
-            assertNotNull(response.getResult().getMessages().get(0).getStatusUpdate().get("userB").getTimestamp());
-            assertNotNull(response.getResult().getMessages().get(0).getParts().get(0).getName());
-            assertEquals(true, response.getResult().getMessages().get(0).getParts().get(0).getSize() > 0);
-            assertNotNull(response.getResult().getMessages().get(0).getParts().get(0).getType());
-            assertNotNull(response.getResult().getMessages().get(0).getParts().get(0).getData());
-            assertNotNull(response.getResult().getOrphanedEvents());
-            assertNotNull(response.getResult().getOrphanedEvents());
-
-            assertNotNull(response.getResult().getMessages().get(1).getParts().get(0).getUrl());
+            for (MessageReceived mr : response.getResult().getMessages()) {
+                assertNotNull(mr.getMessageId());
+                assertNotNull(mr.getSentEventId());
+                assertNotNull(mr.getConversationId());
+                assertNotNull(mr.getFromWhom().getId());
+                assertNotNull(mr.getFromWhom().getName());
+                assertNotNull(mr.getSentOn());
+                assertNotNull(mr.getSentBy());
+                assertNotNull(mr.getMetadata().get("key"));
+                assertNotNull(mr.getStatusUpdate().get("userB").getStatus());
+                assertNotNull(mr.getStatusUpdate().get("userB").getTimestamp());
+                assertNotNull(mr.getParts().get(0).getName());
+                assertEquals(true, mr.getParts().get(0).getSize() > 0);
+                assertNotNull(mr.getParts().get(0).getType());
+                assertNotNull(mr.getParts().get(0).getData());
+                assertNotNull(response.getResult().getOrphanedEvents());
+                assertNotNull(response.getResult().getOrphanedEvents());
+                assertNotNull(mr.getParts().get(0).getUrl());
+            }
         });
     }
 
+    @Test
+    public void queryMessages_broken() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_message_query_broken.json", 200).addHeader("ETag", "eTag"));
+
+        service.queryMessages("someId", 0L, 100).toBlocking().forEach(response -> {
+
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getETag());
+
+            for (MessageReceived mr : response.getResult().getMessages()) {
+                mr.getMessageId();
+                mr.getSentEventId();
+                mr.getConversationId();
+                mr.getFromWhom();
+                mr.getSentOn();
+                mr.getSentBy();
+                mr.getMetadata();
+                mr.getStatusUpdate();
+                mr.getParts();
+            }
+        });
+    }
 
     @Test
     public void queryMessages_orphanedEvents() throws Exception {
@@ -1241,6 +1268,31 @@ public class ServiceTest {
                 assertNotNull(event.getProfileId());
                 assertNotNull(event.getTimestamp());
                 assertTrue(event.isEventTypeDelivered() || event.isEventTypeRead());
+            }
+        });
+    }
+
+    @Test
+    public void queryMessages_brokenOrphanedEvents() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_message_query_orphaned_broken.json", 200).addHeader("ETag", "eTag"));
+
+        service.queryMessages("someId", 0L, 100).toBlocking().forEach(response -> {
+
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getETag());
+
+            for (OrphanedEvent event : response.getResult().getOrphanedEvents()) {
+                event.getMessageId();
+                event.getConversationId();
+                event.getEventId();
+                event.getConversationEventId();
+                event.getName();
+                event.getProfileId();
+                event.getTimestamp();
+                event.isEventTypeDelivered();
+                event.isEventTypeRead();
             }
         });
     }
@@ -1330,11 +1382,11 @@ public class ServiceTest {
             assertEquals(true, response.isSuccessful());
             assertEquals(200, response.getCode());
             assertNotNull(response.getETag());
-            assertEquals("id",response.getResult().getId());
-            assertEquals("folder",response.getResult().getFolder());
+            assertEquals("id", response.getResult().getId());
+            assertEquals("folder", response.getResult().getFolder());
             assertEquals(2662193, response.getResult().getSize().longValue());
-            assertEquals("fullURL",response.getResult().getUrl());
-            assertEquals("image/jpeg",response.getResult().getType());
+            assertEquals("fullURL", response.getResult().getUrl());
+            assertEquals("image/jpeg", response.getResult().getType());
         });
     }
 
@@ -1347,11 +1399,11 @@ public class ServiceTest {
             assertEquals(true, response.isSuccessful());
             assertEquals(200, response.getCode());
             assertNotNull(response.getETag());
-            assertEquals("id",response.getResult().getId());
-            assertEquals("folder",response.getResult().getFolder());
+            assertEquals("id", response.getResult().getId());
+            assertEquals("folder", response.getResult().getFolder());
             assertEquals(2662193, response.getResult().getSize().longValue());
-            assertEquals("fullURL",response.getResult().getUrl());
-            assertEquals("image/jpeg",response.getResult().getType());
+            assertEquals("fullURL", response.getResult().getUrl());
+            assertEquals("image/jpeg", response.getResult().getType());
         });
     }
 
@@ -1364,11 +1416,11 @@ public class ServiceTest {
             assertEquals(true, response.isSuccessful());
             assertEquals(200, response.getCode());
             assertNotNull(response.getETag());
-            assertEquals("id",response.getResult().getId());
-            assertEquals("folder",response.getResult().getFolder());
+            assertEquals("id", response.getResult().getId());
+            assertEquals("folder", response.getResult().getFolder());
             assertEquals(2662193, response.getResult().getSize().longValue());
-            assertEquals("fullURL",response.getResult().getUrl());
-            assertEquals("image/jpeg",response.getResult().getType());
+            assertEquals("fullURL", response.getResult().getUrl());
+            assertEquals("image/jpeg", response.getResult().getType());
         });
     }
 

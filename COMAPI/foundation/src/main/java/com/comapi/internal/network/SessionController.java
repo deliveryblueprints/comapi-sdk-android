@@ -125,7 +125,6 @@ public class SessionController extends ApiWrapper {
     /**
      * Recommended constructor.
      *
-     * @param application          Application instance.
      * @param sessionCreateManager Manager of session create intermediate states.
      * @param pushMgr              Manager for push messaging.
      * @param state                Instance of the global SDK state.
@@ -139,8 +138,7 @@ public class SessionController extends ApiWrapper {
      * @param fcmEnabled           True if Firebase initialised and configured.
      * @param stateListener        Listener for new sessions.
      */
-    SessionController(@NonNull Application application,
-                      @NonNull final SessionCreateManager sessionCreateManager,
+    SessionController(@NonNull final SessionCreateManager sessionCreateManager,
                       @NonNull PushManager pushMgr,
                       @NonNull final AtomicInteger state,
                       @NonNull final DataManager dataMgr,
@@ -153,7 +151,6 @@ public class SessionController extends ApiWrapper {
                       boolean fcmEnabled,
                       @Nullable final ISessionListener stateListener) {
 
-        super(application);
         this.state = state;
         this.dataMgr = dataMgr;
         this.pushMgr = pushMgr;
@@ -285,11 +282,10 @@ public class SessionController extends ApiWrapper {
                             .observeOn(Schedulers.io())
                             .doOnNext(sessionCreateResponse -> log.i("Starting session successful: " + sessionCreateResponse.toString()))
                     ).doOnNext(response -> {
-                        log.i("Starting session has been completed successfully.");
                         sessionCreateManager.setStop();
                     })
                     .doOnError((e) -> {
-                        log.f("Starting session has been completed with error. ", e);
+                        log.f("Error starting session.", e);
                         sessionCreateManager.setStop();
                     });
         } else {

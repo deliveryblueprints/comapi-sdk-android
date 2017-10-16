@@ -30,9 +30,12 @@ import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 
 import com.comapi.helpers.DataTestHelper;
+import com.comapi.helpers.FileHelper;
 import com.comapi.helpers.ResponseTestHelper;
+import com.comapi.internal.CallbackAdapter;
 import com.comapi.internal.ComapiException;
 import com.comapi.internal.NetworkConnectivityListener;
 import com.comapi.internal.helpers.HelpersTest;
@@ -60,16 +63,23 @@ import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowBluetoothAdapter;
 import org.robolectric.util.ActivityController;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import rx.schedulers.Schedulers;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
@@ -417,6 +427,34 @@ public class ComapiClientTest {
     }
 
     @Test
+    public void initialise_reAuthenticate_error() throws InterruptedException, IOException {
+
+        // Force success
+        ShadowGoogleApiAvailability.setIsGooglePlayServicesAvailable(ConnectionResult.SUCCESS);
+
+        DataTestHelper.saveDeviceData();
+        DataTestHelper.saveExpiredSessionData();
+
+        ComapiConfig config = new ComapiConfig()
+                .apiSpaceId("apiSpaceId")
+                .apiConfiguration(apiConfig)
+                .authenticator(new MockAuthenticator())
+                .pushTokenProvider(() -> "fcm-token")
+                .logConfig(new LogConfig()
+                        .setConsoleLevel(LogLevel.DEBUG)
+                        .setNetworkLevel(LogLevel.DEBUG));
+
+        server.enqueue(createMockResponse("rest_session_start.json", 200).addHeader("ETag", "eTag"));
+        server.enqueue(createMockResponse("rest_session_create.json", 500).addHeader("ETag", "eTag"));
+        server.enqueue(getMockPushResponse());
+
+        RxComapiClient pc = RxComapi.initialise(RuntimeEnvironment.application, config).toBlocking().single();
+        assertNotNull(pc);
+        assertEquals(GlobalState.SESSION_OFF, pc.getState());
+        pc.clean(RuntimeEnvironment.application);
+    }
+
+    @Test
     public void connectivity() {
 
         final boolean[] connectionReceived = {false};
@@ -471,6 +509,74 @@ public class ComapiClientTest {
         pc.addListener(stateListener);
         pc.removeListener(stateListener);
 
+        //Check if can set null
+        MessagingListener l1 = null;
+        pc.addListener(l1);
+        StateListener l2 = null;
+        pc.addListener(l2);
+        ProfileListener l3 = null;
+        pc.addListener(l3);
+    }
+
+    @Test
+    public void standardInit() {
+
+        DataTestHelper.saveDeviceData();
+        DataTestHelper.saveSessionData();
+
+        ComapiConfig config = new ComapiConfig()
+                .apiSpaceId("apiSpaceId")
+                .authenticator(new MockAuthenticator())
+                .apiConfiguration(apiConfig);
+
+        //Despite Firebase error init will be successful
+        RxComapiClient pc = RxComapi.initialise(RuntimeEnvironment.application, config).toBlocking().single();
+        assertNotNull(pc);
+        assertEquals(GlobalState.SESSION_ACTIVE, pc.getState());
+    }
+
+    @Test
+    public void standardInit_fcmDisabled() {
+
+        DataTestHelper.saveDeviceData();
+        DataTestHelper.saveSessionData();
+
+        ComapiConfig config = new ComapiConfig()
+                .apiSpaceId("apiSpaceId")
+                .authenticator(new MockAuthenticator())
+                .fcmEnabled(false)
+                .apiConfiguration(apiConfig);
+
+        //Despite Firebase error init will be successful
+        RxComapiClient pc = RxComapi.initialise(RuntimeEnvironment.application, config).toBlocking().single();
+        assertNotNull(pc);
+        assertEquals(GlobalState.SESSION_ACTIVE, pc.getState());
+    }
+
+
+    @Test
+    public void copyLogs() throws FileNotFoundException {
+
+        ComapiConfig config = new ComapiConfig()
+                .logConfig(LogConfig.getDebugConfig())
+                .apiSpaceId("apiSpaceId")
+                .authenticator(new MockAuthenticator())
+                .apiConfiguration(apiConfig);
+
+        //For push update
+        MockResponse mr = new MockResponse();
+        mr.setResponseCode(200);
+        server.enqueue(mr);
+
+        RxComapiClient pc = RxComapi.initialise(RuntimeEnvironment.application, config).toBlocking().single();
+        assertNotNull(pc);
+
+        String fileName = UUID.randomUUID().toString();
+        File file0 = new File(RuntimeEnvironment.application.getFilesDir(), fileName);
+        pc.copyLogs(file0).toBlocking().first();
+        String text = FileHelper.readFile(file0);
+        assertFalse(TextUtils.isEmpty(text));
+        file0.delete();
     }
 
     @Test(expected = ComapiException.class)
@@ -519,6 +625,87 @@ public class ComapiClientTest {
 
         pc.clean(RuntimeEnvironment.application);
         apiConfig = new APIConfig().service(server.url("/").toString()).socket("ws://10.0.0.0/").proxy("http://10.0.0.0/");
+    }
+
+    @Test
+    public void wrongStates() throws NoSuchFieldException, IllegalAccessException {
+
+        ComapiConfig config = new ComapiConfig()
+                .logConfig(LogConfig.getDebugConfig())
+                .apiSpaceId("apiSpaceId")
+                .authenticator(new MockAuthenticator())
+                .apiConfiguration(apiConfig);
+
+        //For push update
+        MockResponse mr = new MockResponse();
+        mr.setResponseCode(200);
+        server.enqueue(mr);
+
+        RxComapiClient pc = RxComapi.initialise(RuntimeEnvironment.application, config).toBlocking().single();
+        assertNotNull(pc);
+
+        Field f = BaseClient.class.getDeclaredField("state"); //NoSuchFieldException
+        f.setAccessible(true);
+        AtomicInteger state = (AtomicInteger) f.get(pc); //IllegalAccessException
+
+        state.set(GlobalState.NOT_INITIALISED);
+
+        // With 'not initialised' state set all bellow calls should return nulls
+
+        String fileName = UUID.randomUUID().toString();
+        File file0 = new File(RuntimeEnvironment.application.getFilesDir(), fileName);
+        File merged = pc.copyLogs(file0).toBlocking().first();
+        assertNull(merged);
+
+        assertNull(pc.getSession());
+        assertNull(pc.getLogs().toBlocking().first());
+    }
+
+    @Test
+    public void wrongStates2() throws NoSuchFieldException, IllegalAccessException {
+
+        ComapiConfig config = new ComapiConfig()
+                .logConfig(LogConfig.getDebugConfig())
+                .apiSpaceId("apiSpaceId")
+                .authenticator(new MockAuthenticator())
+                .apiConfiguration(apiConfig);
+        BaseClient<RxServiceAccessor> client = new BaseClient<RxServiceAccessor>(config) {
+            @Override
+            public RxServiceAccessor service() {
+                return null;
+            }
+        };
+
+        Field f = BaseClient.class.getDeclaredField("state");
+        f.setAccessible(true);
+        AtomicInteger state = (AtomicInteger) f.get(client);
+
+        state.set(GlobalState.INITIALISED);
+        BaseClient<RxServiceAccessor> client2 = client.initialise(RuntimeEnvironment.application, client, new CallbackAdapter()).toBlocking().single();
+        assertNotNull(client2);
+    }
+
+    @Test(expected = ComapiException.class)
+    public void wrongStates3() throws NoSuchFieldException, IllegalAccessException {
+
+        ComapiConfig config = new ComapiConfig()
+                .logConfig(LogConfig.getDebugConfig())
+                .apiSpaceId("apiSpaceId")
+                .authenticator(new MockAuthenticator())
+                .apiConfiguration(apiConfig);
+        BaseClient<RxServiceAccessor> client = new BaseClient<RxServiceAccessor>(config) {
+            @Override
+            public RxServiceAccessor service() {
+                return null;
+            }
+        };
+
+        Field f = BaseClient.class.getDeclaredField("state");
+        f.setAccessible(true);
+        AtomicInteger state = (AtomicInteger) f.get(client);
+
+        state.set(GlobalState.INITIALISING);
+        client.initialise(RuntimeEnvironment.application, client, new CallbackAdapter()).toBlocking().single();
     }
 
     private MockResponse createMockResponse(String fileName, int responseCode) throws IOException {

@@ -20,13 +20,13 @@
 
 package com.comapi.internal.network;
 
-import android.app.Application;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.comapi.QueryBuilder;
 import com.comapi.internal.Parser;
+import com.comapi.internal.log.Logger;
 import com.comapi.internal.network.api.RestApi;
 import com.comapi.internal.network.model.conversation.ConversationCreate;
 import com.comapi.internal.network.model.conversation.ConversationDetails;
@@ -57,6 +57,8 @@ import rx.functions.Func1;
  */
 class ServiceApiWrapper extends ApiWrapper {
 
+    private final Logger log;
+
     protected RestApi service;
 
     protected final String apiSpaceId;
@@ -64,12 +66,11 @@ class ServiceApiWrapper extends ApiWrapper {
     /**
      * Recommended constructor.
      *
-     * @param application Application instance.
      * @param apiSpaceId  Comapi Api Space in which the SDK operates.
      */
-    ServiceApiWrapper(Application application, String apiSpaceId) {
-        super(application);
+    ServiceApiWrapper(@NonNull String apiSpaceId, @NonNull Logger log) {
         this.apiSpaceId = apiSpaceId;
+        this.log = log;
     }
 
     /**
@@ -90,7 +91,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to send message to a conversation.
      */
     Observable<ComapiResult<MessageSentResponse>> doSendMessage(@NonNull final String token, @NonNull final String conversationId, @NonNull final MessageToSend message) {
-        return wrapObservable(service.sendMessage(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, message).map(mapToComapiResult()));
+        return wrapObservable(service.sendMessage(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, message).map(mapToComapiResult()), log, "Sending message to conversation " + conversationId);
     }
 
     /**
@@ -102,7 +103,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable emitting details of uploaded content.
      */
     Observable<ComapiResult<UploadContentResponse>> doUploadContent(@NonNull final String token, @NonNull final String folder, @Nullable final String name, @NonNull final ContentData data) {
-        return wrapObservable(service.uploadContent(AuthManager.addAuthPrefix(token), apiSpaceId, folder, name, data.getBody()).map(mapToComapiResult()));
+        return wrapObservable(service.uploadContent(AuthManager.addAuthPrefix(token), apiSpaceId, folder, name, data.getBody()).map(mapToComapiResult()), log, "Uploading content " + name);
     }
 
     /**
@@ -113,7 +114,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Profile details from the service.
      */
     Observable<ComapiResult<Map<String, Object>>> doGetProfile(@NonNull final String token, @NonNull final String profileId) {
-        return wrapObservable(service.getProfile(AuthManager.addAuthPrefix(token), apiSpaceId, profileId).map(mapToComapiResult()));
+        return wrapObservable(service.getProfile(AuthManager.addAuthPrefix(token), apiSpaceId, profileId).map(mapToComapiResult()), log, "Getting profile " + profileId);
     }
 
     /**
@@ -124,8 +125,8 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Profiles detail from the service.
      */
     Observable<ComapiResult<List<Map<String, Object>>>> doQueryProfiles(@NonNull final String token, @NonNull final String queryString) {
-        final String uri = "/apispaces/"+apiSpaceId+"/profiles"+queryString;
-        return wrapObservable(service.queryProfiles(AuthManager.addAuthPrefix(token), uri).map(mapToComapiResult()));
+        final String uri = "/apispaces/" + apiSpaceId + "/profiles" + queryString;
+        return wrapObservable(service.queryProfiles(AuthManager.addAuthPrefix(token), uri).map(mapToComapiResult()), log, "Query profiles " + queryString);
     }
 
     /**
@@ -136,7 +137,8 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable with to perform update profile for current session.
      */
     Observable<ComapiResult<Map<String, Object>>> doUpdateProfile(@NonNull final String token, @NonNull final String profileId, @NonNull final Map<String, Object> profileDetails, final String eTag) {
-        return wrapObservable(!TextUtils.isEmpty(eTag) ? service.updateProfile(AuthManager.addAuthPrefix(token), eTag, apiSpaceId, profileId, profileDetails).map(mapToComapiResult()) : service.updateProfile(AuthManager.addAuthPrefix(token), apiSpaceId, profileId, profileDetails).map(mapToComapiResult()));
+        return wrapObservable(!TextUtils.isEmpty(eTag) ? service.updateProfile(AuthManager.addAuthPrefix(token), eTag, apiSpaceId, profileId, profileDetails).map(mapToComapiResult()) : service.updateProfile(AuthManager.addAuthPrefix(token), apiSpaceId, profileId, profileDetails)
+                .map(mapToComapiResult()), log, "Updating profiles " + profileId);
     }
 
     /**
@@ -147,7 +149,8 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable with to perform patch profile for current session.
      */
     Observable<ComapiResult<Map<String, Object>>> doPatchProfile(@NonNull final String token, @NonNull final String profileId, @NonNull final Map<String, Object> profileDetails, final String eTag) {
-        return wrapObservable(!TextUtils.isEmpty(eTag) ? service.patchProfile(AuthManager.addAuthPrefix(token), eTag, apiSpaceId, profileId, profileDetails).map(mapToComapiResult()) : service.patchProfile(AuthManager.addAuthPrefix(token), apiSpaceId, profileId, profileDetails).map(mapToComapiResult()));
+        return wrapObservable(!TextUtils.isEmpty(eTag) ? service.patchProfile(AuthManager.addAuthPrefix(token), eTag, apiSpaceId, profileId, profileDetails).map(mapToComapiResult()) : service.patchProfile(AuthManager.addAuthPrefix(token), apiSpaceId, profileId, profileDetails)
+                .map(mapToComapiResult()), log, "Updating profiles " + profileId);
     }
 
     /**
@@ -158,7 +161,8 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to to create a conversation.
      */
     Observable<ComapiResult<ConversationDetails>> doCreateConversation(@NonNull final String token, @NonNull final ConversationCreate request) {
-        return wrapObservable(service.createConversation(AuthManager.addAuthPrefix(token), apiSpaceId, request).map(mapToComapiResult()));
+        return wrapObservable(service.createConversation(AuthManager.addAuthPrefix(token), apiSpaceId, request)
+                .map(mapToComapiResult()), log, "Creating conversation" + request.getName());
     }
 
     /**
@@ -170,7 +174,8 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to to create a conversation.
      */
     Observable<ComapiResult<Void>> doDeleteConversation(@NonNull final String token, @NonNull final String conversationId, final String eTag) {
-        return wrapObservable(!TextUtils.isEmpty(eTag) ? service.deleteConversation(AuthManager.addAuthPrefix(token), eTag, apiSpaceId, conversationId).map(mapToComapiResult()) : service.deleteConversation(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId).map(mapToComapiResult()));
+        return wrapObservable(!TextUtils.isEmpty(eTag) ? service.deleteConversation(AuthManager.addAuthPrefix(token), eTag, apiSpaceId, conversationId).map(mapToComapiResult()) : service.deleteConversation(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId)
+                .map(mapToComapiResult()), log, "Deleting conversation " + conversationId);
     }
 
     /**
@@ -181,7 +186,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to to create a conversation.
      */
     Observable<ComapiResult<ConversationDetails>> doGetConversation(@NonNull final String token, @NonNull final String conversationId) {
-        return wrapObservable(service.getConversation(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId).map(mapToComapiResult()));
+        return wrapObservable(service.getConversation(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId).map(mapToComapiResult()), log, "Getting conversation" + conversationId);
     }
 
     /**
@@ -192,7 +197,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to to create a conversation.
      */
     Observable<ComapiResult<List<Conversation>>> doGetConversations(@NonNull final String token, @NonNull final String profileId, @NonNull final Scope scope) {
-        return wrapObservable(service.getConversations(AuthManager.addAuthPrefix(token), apiSpaceId, scope.getValue(), profileId).map(mapToComapiResult()));
+        return wrapObservable(service.getConversations(AuthManager.addAuthPrefix(token), apiSpaceId, scope.getValue(), profileId).map(mapToComapiResult()), log, "Getting conversations " + profileId + " " + scope.name());
     }
 
     /**
@@ -205,7 +210,8 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to update a conversation.
      */
     Observable<ComapiResult<ConversationDetails>> doUpdateConversation(@NonNull final String token, @NonNull final String conversationId, @NonNull final ConversationUpdate request, final String eTag) {
-        return wrapObservable(!TextUtils.isEmpty(eTag) ? service.updateConversation(AuthManager.addAuthPrefix(token), eTag, apiSpaceId, conversationId, request).map(mapToComapiResult()) : service.updateConversation(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, request).map(mapToComapiResult()));
+        return wrapObservable(!TextUtils.isEmpty(eTag) ? service.updateConversation(AuthManager.addAuthPrefix(token), eTag, apiSpaceId, conversationId, request).map(mapToComapiResult()) : service.updateConversation(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, request)
+                .map(mapToComapiResult()), log, "Updating conversation " + conversationId);
     }
 
     /**
@@ -217,7 +223,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to remove list of participants from a conversation.
      */
     Observable<ComapiResult<Void>> doRemoveParticipants(@NonNull final String token, @NonNull final String conversationId, @NonNull final List<String> ids) {
-        return wrapObservable(service.deleteParticipants(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, ids).map(mapToComapiResult()));
+        return wrapObservable(service.deleteParticipants(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, ids).map(mapToComapiResult()), log, "Removing participants from " + conversationId);
     }
 
     /**
@@ -228,7 +234,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to get a list of conversation participants.
      */
     Observable<ComapiResult<List<Participant>>> doGetParticipants(@NonNull final String token, @NonNull final String conversationId) {
-        return wrapObservable(service.getParticipants(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId).map(mapToComapiResult()));
+        return wrapObservable(service.getParticipants(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId).map(mapToComapiResult()), log, "Getting participants for " + conversationId);
     }
 
     /**
@@ -240,7 +246,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to add participants to a conversation.
      */
     Observable<ComapiResult<Void>> doAddParticipants(@NonNull final String token, @NonNull final String conversationId, @NonNull final List<Participant> participants) {
-        return wrapObservable(service.addParticipants(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, participants).map(mapToComapiResult()));
+        return wrapObservable(service.addParticipants(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, participants).map(mapToComapiResult()), log, "Adding participants to " + conversationId);
     }
 
     /**
@@ -252,7 +258,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to modify message statuses.
      */
     Observable<ComapiResult<Void>> doUpdateMessageStatus(@NonNull final String token, @NonNull final String conversationId, @NonNull final List<MessageStatusUpdate> msgStatusList) {
-        return wrapObservable(service.updateMessageStatus(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, msgStatusList).map(mapToComapiResult()));
+        return wrapObservable(service.updateMessageStatus(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, msgStatusList).map(mapToComapiResult()), log, "Updating message status in conversation " + conversationId);
     }
 
     /**
@@ -265,10 +271,11 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to get events in a conversation.
      */
     Observable<ComapiResult<EventsQueryResponse>> doQueryEvents(@NonNull final String token, @NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit) {
-        return service.queryEvents(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, from, limit).map(mapToComapiResult()).flatMap(result -> {
-            EventsQueryResponse newResult = new EventsQueryResponse(result.getResult(), new Parser());
-            return wrapObservable(Observable.just(new ComapiResult<>(result, newResult)));
-        });
+        return addLogging(service.queryEvents(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, from, limit).map(mapToComapiResult()), log, "Querying events in " + conversationId)
+                .flatMap(result -> {
+                    EventsQueryResponse newResult = new EventsQueryResponse(result.getResult(), new Parser());
+                    return wrapObservable(Observable.just(new ComapiResult<>(result, newResult)));
+                });
     }
 
     /**
@@ -281,10 +288,11 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to get events in a conversation.
      */
     Observable<ComapiResult<ConversationEventsResponse>> doQueryConversationEvents(@NonNull final String token, @NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit) {
-        return service.queryEvents(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, from, limit).map(mapToComapiResult()).flatMap(result -> {
-            ConversationEventsResponse newResult = new ConversationEventsResponse(result.getResult(), new Parser());
-            return wrapObservable(Observable.just(new ComapiResult<>(result, newResult)));
-        });
+        return addLogging(service.queryEvents(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, from, limit).map(mapToComapiResult()), log, "Querying conversation events in " + conversationId)
+                .flatMap(result -> {
+                    ConversationEventsResponse newResult = new ConversationEventsResponse(result.getResult(), new Parser());
+                    return wrapObservable(Observable.just(new ComapiResult<>(result, newResult)));
+                });
     }
 
     /**
@@ -297,7 +305,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return Observable to get messages in a conversation.
      */
     Observable<ComapiResult<MessagesQueryResponse>> doQueryMessages(@NonNull final String token, @NonNull final String conversationId, final Long from, @NonNull final Integer limit) {
-        return wrapObservable(service.queryMessages(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, from, limit).map(mapToComapiResult()));
+        return wrapObservable(service.queryMessages(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, from, limit).map(mapToComapiResult()), log, "Querying messages in " + conversationId);
     }
 
     /**
@@ -307,7 +315,7 @@ class ServiceApiWrapper extends ApiWrapper {
      * @return @return Observable to get Facebook data-ref.
      */
     Observable<ComapiResult<String>> doCreateFbOptInState(@NonNull final String token) {
-        return wrapObservable(service.createFbOptInState(AuthManager.addAuthPrefix(token), apiSpaceId, new Object()).map(mapToComapiResult()));
+        return wrapObservable(service.createFbOptInState(AuthManager.addAuthPrefix(token), apiSpaceId, new Object()).map(mapToComapiResult()), log, "Creating fb opt in state.");
     }
 
     /**
@@ -319,9 +327,9 @@ class ServiceApiWrapper extends ApiWrapper {
      */
     Observable<ComapiResult<Void>> doIsTyping(@NonNull final String token, @NonNull final String conversationId, final boolean isTyping) {
         if (isTyping) {
-            return wrapObservable(service.isTyping(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId).map(mapToComapiResult()));
+            return wrapObservable(service.isTyping(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId).map(mapToComapiResult()), log, "Sending is typing.");
         } else {
-            return wrapObservable(service.isNotTyping(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId).map(mapToComapiResult()));
+            return wrapObservable(service.isNotTyping(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId).map(mapToComapiResult()), log, "Sending is not typing");
         }
     }
 
@@ -334,5 +342,4 @@ class ServiceApiWrapper extends ApiWrapper {
     <E> Func1<Response<E>, ComapiResult<E>> mapToComapiResult() {
         return ComapiResult::new;
     }
-
 }

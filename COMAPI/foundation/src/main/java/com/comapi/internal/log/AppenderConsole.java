@@ -46,22 +46,11 @@ class AppenderConsole extends Appender {
     }
 
     @Override
-    public void appendLog(String clazz, int msgLogLevel, String msg, Throwable exception) {
+    public void appendLog(String tag, int msgLogLevel, String msg, Throwable exception) {
 
         if (shouldAppend(msgLogLevel)) {
 
-            String log;
-
-            switch (getLevel()) {
-
-                //TODO
-//                case LogLevelConst.DEBUG:
-//                    log = formatter.formatMessage(msgLogLevel, clazz, msg);
-
-                default:
-                    log = formatter.formatMessage(msgLogLevel, clazz, msg);
-
-            }
+            final String log = formatter.formatMessage(msgLogLevel, tag, msg);
 
             switch (msgLogLevel) {
 
@@ -84,7 +73,6 @@ class AppenderConsole extends Appender {
                 case LogLevelConst.DEBUG:
                     Log.d(LogConstants.TAG, log);
                     break;
-
             }
         }
     }

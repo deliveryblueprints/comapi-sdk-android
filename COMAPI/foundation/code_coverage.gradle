@@ -13,7 +13,7 @@ ext {
             'branch'     : 70,
             'line'       : 85,
             'complexity' : 70,
-            'method'     : 84,
+            'method'     : 85,
             'class'      : 85
     ]
 }

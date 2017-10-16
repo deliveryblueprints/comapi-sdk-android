@@ -29,6 +29,8 @@ import com.comapi.internal.lifecycle.LifecycleListener;
 import com.comapi.internal.log.Logger;
 import com.comapi.internal.network.api.RxComapiService;
 
+import java.io.File;
+
 import rx.Observable;
 
 /**
@@ -52,7 +54,7 @@ public class RxComapiClient extends BaseClient<RxServiceAccessor> {
      * Initialise ComapiImpl client instance.
      *
      * @param application Application context.
-     * @param adapter Observables to callbacks adapter.
+     * @param adapter     Observables to callbacks adapter.
      * @return Observable returning client instance.
      */
     <T extends RxComapiClient> Observable<T> initialise(@NonNull final Application application, CallbackAdapter adapter, @NonNull final T instance) {
@@ -94,6 +96,16 @@ public class RxComapiClient extends BaseClient<RxServiceAccessor> {
     @Override
     public Observable<String> getLogs() {
         return super.getLogs();
+    }
+
+    /**
+     * Gets the content of internal log files merged into provided file.
+     *
+     * @param file File to merge internal logs into.
+     * @return Observable with a same file this time containing all the internal logs merged into.
+     */
+    public Observable<File> copyLogs(@NonNull File file) {
+        return super.copyLogs(file);
     }
 
     @Override
