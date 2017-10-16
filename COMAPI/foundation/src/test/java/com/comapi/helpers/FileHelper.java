@@ -18,21 +18,24 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.comapi.internal.network;
+package com.comapi.helpers;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 /**
- * Helper to check internet connectivity.
+ * Helper to read content of the files.
  *
- * Created by Marcin Swierczek
- * 12/04/2016.
+ * @author Marcin Swierczek
+ * @since 1.0.3
  */
-public class Connectivity {
+public class FileHelper {
 
-    public static boolean isNetworkAvailable(final Context context) {
-        final ConnectivityManager connectivityManager = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
-        return connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected();
+    public static String readFile(File file) throws FileNotFoundException {
+        Scanner scanner = new Scanner( file );
+        String text = scanner.useDelimiter("\\A").next();
+        scanner.close(); // Put this call in a finally block
+        return text;
     }
 }

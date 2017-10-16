@@ -4,6 +4,7 @@
   "messages": [
     {
       "id": "60526ba0-76b3-4f33-9e2e-20f4a8bb548b",
+      "sentEventId":38,
       "metadata": {
         "key": "value"
       },
@@ -21,7 +22,8 @@
           "data": "some message",
           "name": "body",
           "size": 12,
-          "type": "text/plain"
+          "type": "text/plain",
+          "url": "some url"
         }
       ],
       "statusUpdates": {
@@ -33,6 +35,7 @@
     },
     {
       "id": "a36c8c12-ebbb-4280-bdd7-60e0d0c620ab",
+      "sentEventId":37,
       "metadata": {
         "key": "value"
       },
@@ -56,7 +59,7 @@
       ],
       "statusUpdates": {
         "userB": {
-          "status": "read",
+          "status": "delivered",
           "on": "2016-10-21T14:50:19.978Z"
         }
       }

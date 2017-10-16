@@ -276,7 +276,7 @@ class AppenderFile extends Appender {
                 }
             }
             return mergedFile;
-        });
+        }).subscribeOn(Schedulers.from(executor));
     }
 
     /**

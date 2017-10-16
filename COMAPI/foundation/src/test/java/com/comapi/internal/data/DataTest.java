@@ -26,6 +26,8 @@ import com.comapi.BuildConfig;
 import com.comapi.internal.log.LogManager;
 
 import com.comapi.internal.log.Logger;
+import com.comapi.internal.network.model.messaging.MessageReceived;
+import com.comapi.internal.network.model.messaging.OrphanedEvent;
 
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +57,7 @@ public class DataTest {
     @Before
     public void setUpComapi() throws Exception {
         mgr = new DataManager();
-        mgr.init(RuntimeEnvironment.application, API_SPACE_ID,new Logger(new LogManager(), ""));
+        mgr.init(RuntimeEnvironment.application, API_SPACE_ID, new Logger(new LogManager(), ""));
     }
 
     @Test
@@ -127,6 +129,21 @@ public class DataTest {
     }
 
     @Test
+    public void testOrphanedEventConstructors() throws Exception {
+        OrphanedEvent event = new OrphanedEvent();
+        OrphanedEvent.OrphanedEventData data = event.new OrphanedEventData();
+        OrphanedEvent.OrphanedEventPayload payload = event.new OrphanedEventPayload();
+        assertNotNull(data);
+        assertNotNull(payload);
+    }
+
+    @Test
+    public void testMsgReceivedConstructors() throws Exception {
+        MessageReceived msg = new MessageReceived();
+        MessageReceived.Status status = msg.new Status();
+    }
+
+    @Test
     public void testController() {
 
         Device device = mgr.getDeviceDAO().device();
@@ -141,5 +158,4 @@ public class DataTest {
         mgr.getDeviceDAO().clearAll();
         mgr.getSessionDAO().clearAll();
     }
-
 }

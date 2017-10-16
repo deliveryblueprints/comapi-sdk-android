@@ -41,6 +41,7 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -177,7 +178,6 @@ public class ALoggingTest {
 
         // Private config in AppenderFile
         int maxFiles = 2;
-        int LOG_FILE_SIZE_LIMIT_KB = 100;
 
         for (int i = 0; i < 1000; i++) {
             logMessages(log, "Some very very very long text, ok maybe not so long.");
@@ -192,18 +192,12 @@ public class ALoggingTest {
         Context context = InstrumentationRegistry.getTargetContext();
         File dir = context.getFilesDir();
 
-        for (int i = maxFiles; i > 1; i--) {
+        for (int i = maxFiles; i >= 1; i--) {
             File file = new File(dir, name(i));
             assertEquals(true, file.exists());
-            float length = file.length() / 1024.0f;
-            assertEquals(true, length >= LOG_FILE_SIZE_LIMIT_KB);
+            double length = Math.floor(file.length() / 1024.0f - 1);
+            assertTrue(length <= LIMIT);
         }
-
-        File file = new File(dir, name(1));
-        assertEquals(true, file.exists());
-        float length = file.length() / 1024.0f;
-        assertEquals(true, length < 2 * LOG_FILE_SIZE_LIMIT_KB);
-
     }
 
     private void loadAndValidateLogs(LogManager mgr, final String id, boolean isFatal, boolean isError, boolean isWarning, boolean isInfo, boolean isDebug) throws InterruptedException {
