@@ -28,7 +28,9 @@ import com.google.gson.annotations.SerializedName;
  *
  * @author Marcin Swierczek
  * @since 1.0.0
+ * @deprecated This event won't be emitted by the SDK. The correct way to update local db with a conversation we were added to as a participant is to listen to {@link ParticipantAddedEvent} events (first per conversationId).
  */
+@Deprecated
 public class ConversationCreateEvent extends ConversationEvent {
 
     public static final String TYPE = "conversation.create";
