@@ -154,17 +154,6 @@ class ServiceApiWrapper extends ApiWrapper {
     }
 
     /**
-     * Patches profile for an active session.
-     *
-     * @param token          Comapi access token.
-     * @param profileDetails Profile details.
-     * @return Observable with to perform patch profile for current session.
-     */
-    Observable<ComapiResult<Map<String, Object>>> doPatchProfile(@NonNull final String token, @NonNull final String profileId, @NonNull final Map<String, Object> profileDetails, final String eTag) {
-        return wrapObservable(!TextUtils.isEmpty(eTag) ? service.patchProfile(AuthManager.addAuthPrefix(token), eTag, apiSpaceId, profileId, profileDetails).map(mapToComapiResult()) : service.patchProfile(AuthManager.addAuthPrefix(token), apiSpaceId, profileId, profileDetails).map(mapToComapiResult()));
-    }
-
-    /**
      * Returns observable to create a conversation.
      *
      * @param token   Comapi access token.
@@ -304,22 +293,6 @@ class ServiceApiWrapper extends ApiWrapper {
                     ConversationEventsResponse newResult = new ConversationEventsResponse(result.getResult(), new Parser());
                     return wrapObservable(Observable.just(new ComapiResult<>(result, newResult)));
                 });
-    }
-
-    /**
-     * Query conversation events.
-     *
-     * @param token          Comapi access token.
-     * @param conversationId ID of a conversation to query events in it.
-     * @param from           ID of the event to start from.
-     * @param limit          Limit of events to obtain in this call.
-     * @return Observable to get events in a conversation.
-     */
-    Observable<ComapiResult<ConversationEventsResponse>> doQueryConversationEvents(@NonNull final String token, @NonNull final String conversationId, @NonNull final Long from, @NonNull final Integer limit) {
-        return service.queryEvents(AuthManager.addAuthPrefix(token), apiSpaceId, conversationId, from, limit).map(mapToComapiResult()).flatMap(result -> {
-            ConversationEventsResponse newResult = new ConversationEventsResponse(result.getResult(), new Parser());
-            return wrapObservable(Observable.just(new ComapiResult<>(result, newResult)));
-        });
     }
 
     /**
