@@ -181,7 +181,6 @@ public class ServiceTest {
 
             }
 
-
             @Override
             public void onSocketStarted(SocketStartEvent event) {
 
