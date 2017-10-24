@@ -88,7 +88,9 @@ public abstract class MessagingListener implements IMessagingListener {
      * Dispatch conversation created event.
      *
      * @param event Event to dispatch.
+     * @deprecated This event won't be emitted by the SDK. The correct way to update local db with a conversation we were added to as a participant is to listen to {@link ParticipantAddedEvent} events (first per conversationId).
      */
+    @Deprecated
     public void onConversationCreated(ConversationCreateEvent event) {}
 
     /**

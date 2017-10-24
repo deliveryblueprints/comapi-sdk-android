@@ -48,6 +48,7 @@ import com.comapi.internal.network.api.RestApi;
 import com.comapi.internal.network.sockets.SocketController;
 import com.comapi.internal.push.PushManager;
 
+import java.io.File;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -131,7 +132,7 @@ public abstract class BaseClient<T> implements IClient<T> {
                             return loadSession(state);
                         }
                     })
-                    .doOnNext(session -> log.d(session != null ? "ComapiImpl initialisation with session for " + session.getProfileId() : "ComapiImpl initialisation with no session."))
+                    .doOnNext(session -> log.d(session != null ? "Comapi initialised with session profile id : " + session.getProfileId() : "Comapi initialisation with no session."))
                     .doOnError(e -> {
                         if (log != null) {
                             log.f("Error initialising ComapiImpl SDK. " + e.getMessage(), new ComapiException("Error initialising ComapiImpl SDK.", e));
@@ -179,8 +180,8 @@ public abstract class BaseClient<T> implements IClient<T> {
                 //logging
                 final LogConfig logConfig = config.getLogConfig() != null ? config.getLogConfig() : LogConfig.getProductionConfig();
                 logMgr.init(application.getApplicationContext(), logConfig.getConsoleLevel().getValue(), logConfig.getFileLevel().getValue(), config.getLogSizeLimit());
-                log = new Logger(logMgr, LogConstants.TAG);
-                log.d("ComapiImpl initialising on " + (Thread.currentThread() == Looper.getMainLooper().getThread() ? "main thread" : "background thread"));
+                log = new Logger(logMgr, LogConstants.TAG + "_" + BaseComapi.getVersion());
+                log.i("Comapi SDK " + BaseComapi.getVersion() + " client " + this.hashCode() + " initialising on " + (Thread.currentThread() == Looper.getMainLooper().getThread() ? "main thread." : "background thread."));
 
                 //public listeners
                 listenerListAdapter = new ListenerListAdapter(log);
@@ -207,9 +208,9 @@ public abstract class BaseClient<T> implements IClient<T> {
                 }
 
                 //services
-                service = new InternalService(application, adapter, dataMgr, pushMgr, config.getApiSpaceId(), application.getPackageName(), log);
+                service = new InternalService(adapter, dataMgr, pushMgr, config.getApiSpaceId(), application.getPackageName(), log);
                 RestApi restApi = service.initialiseRestClient(logConfig.getNetworkLevel().getValue(), baseURIs);
-                SessionController sessionController = service.initialiseSessionController(application,
+                SessionController sessionController = service.initialiseSessionController(
                         new SessionCreateManager(new AtomicBoolean()),
                         pushMgr,
                         state,
@@ -283,7 +284,17 @@ public abstract class BaseClient<T> implements IClient<T> {
      */
     @Override
     public Observable<String> getLogs() {
-        return state.get() > GlobalState.INITIALISING ? logMgr.getLogs() : null;
+        return state.get() > GlobalState.INITIALISING ? logMgr.getLogs() : Observable.fromCallable(() -> null);
+    }
+
+    /**
+     * Gets the content of internal log files merged into provided file.
+     *
+     * @param file File to merge internal logs into.
+     * @return Observable returning file with merged internal logs.
+     */
+    public Observable<File> copyLogs(@NonNull File file) {
+        return state.get() > GlobalState.INITIALISING ? logMgr.copyLogs(file) : Observable.fromCallable(() -> null);
     }
 
     @Override

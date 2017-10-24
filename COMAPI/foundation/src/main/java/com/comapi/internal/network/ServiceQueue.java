@@ -20,7 +20,6 @@
 
 package com.comapi.internal.network;
 
-import android.app.Application;
 import android.support.annotation.NonNull;
 
 import com.comapi.internal.data.DataManager;
@@ -37,6 +36,7 @@ import com.comapi.internal.network.model.messaging.MessageSentResponse;
 import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.MessagesQueryResponse;
+import com.comapi.internal.network.model.messaging.UploadContentResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,13 +64,12 @@ class ServiceQueue extends ServiceApiWrapper {
     /**
      * Recommended constructor.
      *
-     * @param application Application instance.
      * @param apiSpaceId  Comapi Api Space in which SDK operates.
      * @param dataMgr     Manager for internal data storage.
      * @param log         Internal logger.
      */
-    ServiceQueue(Application application, String apiSpaceId, DataManager dataMgr, Logger log) {
-        super(application, apiSpaceId);
+    ServiceQueue(@NonNull String apiSpaceId, @NonNull  DataManager dataMgr, @NonNull  Logger log) {
+        super(apiSpaceId, log);
         this.dataMgr = dataMgr;
         this.log = log;
         taskQueue = new TaskQueue();
@@ -113,6 +112,19 @@ class ServiceQueue extends ServiceApiWrapper {
                     })
                     .doOnCompleted(this::executePending);
 
+        }
+
+        Observable<ComapiResult<UploadContentResponse>> queueUploadContent(@NonNull final String folder, @NonNull final ContentData body) {
+
+            return createNewTask()
+                    .flatMap(new Func1<String, Observable<ComapiResult<UploadContentResponse>>>() {
+                        @Override
+                        public Observable<ComapiResult<UploadContentResponse>> call(String token) {
+                            log.d("doUploadContent called from the service queue. " + queue.size() + " requests still pending.");
+                            return doUploadContent(token, folder, body.getName(), body);
+                        }
+                    })
+                    .doOnCompleted(this::executePending);
         }
 
         Observable<ComapiResult<Map<String, Object>>> queueGetProfile(String profileId) {

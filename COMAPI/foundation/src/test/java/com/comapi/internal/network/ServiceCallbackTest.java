@@ -70,6 +70,7 @@ import com.comapi.internal.network.model.messaging.MessageStatus;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.MessagesQueryResponse;
 import com.comapi.internal.network.model.messaging.Part;
+import com.comapi.internal.network.model.messaging.UploadContentResponse;
 import com.comapi.internal.network.sockets.SocketController;
 import com.comapi.internal.network.sockets.SocketEventListener;
 import com.comapi.internal.push.PushManager;
@@ -83,12 +84,14 @@ import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -199,12 +202,12 @@ public class ServiceCallbackTest {
             }
         };
 
-        service = new InternalService(application, callbackAdapter, dataMgr, pushMgr, API_SPACE_ID, "packageName", log);
+        service = new InternalService(callbackAdapter, dataMgr, pushMgr, API_SPACE_ID, "packageName", log);
 
         restApi = service.initialiseRestClient(LogLevel.DEBUG.getValue(), baseURIs);
 
         isCreateSessionInProgress = new AtomicBoolean();
-        sessionController = service.initialiseSessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), true, new StateListener() {
+        sessionController = service.initialiseSessionController(new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), true, new StateListener() {
         });
         sessionController.setSocketController(new SocketController(dataMgr, new SocketEventListener() {
             @Override
@@ -347,7 +350,7 @@ public class ServiceCallbackTest {
     @Test
     public void getProfile_unauthorised_retry3times_shouldFail() throws Exception {
 
-        sessionController = new SessionController(application, new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, true, new StateListener() {
+        sessionController = new SessionController(new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, dataMgr, authenticator, restApi, "", new Handler(Looper.getMainLooper()), new Logger(new LogManager(), ""), null, true, new StateListener() {
         }) {
             @Override
             protected Observable<SessionData> reAuthenticate() {
@@ -359,21 +362,16 @@ public class ServiceCallbackTest {
         isCreateSessionInProgress.set(false);
 
         // Go through all 3 retries
-        MockResponse mr = new MockResponse();
-        mr.setResponseCode(401);
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_start.json", 200).addHeader("ETag", "eTag"));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_create.json", 200).addHeader("ETag", "eTag"));
-        server.enqueue(new MockResponse().setResponseCode(200));
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_start.json", 200).addHeader("ETag", "eTag"));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_create.json", 200).addHeader("ETag", "eTag"));
-        server.enqueue(new MockResponse().setResponseCode(200));
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_start.json", 200).addHeader("ETag", "eTag"));
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_session_create.json", 200).addHeader("ETag", "eTag"));
-        server.enqueue(new MockResponse().setResponseCode(200));
-        server.enqueue(mr);
+        server.enqueue(new MockResponse().setResponseCode(401));
 
         final MockCallback<ComapiResult<Map<String, Object>>> listener = new MockCallback<>();
 
@@ -1023,6 +1021,80 @@ public class ServiceCallbackTest {
         }
 
         assertEquals(true, listener.getResult().getResult().equals(testResp));
+    }
+
+    @Test
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void uploadContent_file() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_upload_content.json", 200).addHeader("ETag", "eTag"));
+
+        File file = new File(RuntimeEnvironment.application.getFilesDir(), "testFile");
+        file.setReadable(true);
+        file.createNewFile();
+
+        final MockCallback<ComapiResult<UploadContentResponse>> listener = new MockCallback<>();
+
+        service.uploadContent("folder", ContentData.create(file, "mime_type", "name"), listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getETag());
+        assertEquals("id",listener.getResult().getResult().getId());
+        assertEquals("folder",listener.getResult().getResult().getFolder());
+        assertEquals(2662193, listener.getResult().getResult().getSize().longValue());
+        assertEquals("fullURL",listener.getResult().getResult().getUrl());
+        assertEquals("image/jpeg",listener.getResult().getResult().getType());
+    }
+
+    @Test
+    public void uploadContent_string() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_upload_content.json", 200).addHeader("ETag", "eTag"));
+
+        final MockCallback<ComapiResult<UploadContentResponse>> listener = new MockCallback<>();
+
+        service.uploadContent("folder", ContentData.create("string", "mime_type", "name"), listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getETag());
+        assertEquals("id",listener.getResult().getResult().getId());
+        assertEquals("folder",listener.getResult().getResult().getFolder());
+        assertEquals(2662193, listener.getResult().getResult().getSize().longValue());
+        assertEquals("fullURL",listener.getResult().getResult().getUrl());
+        assertEquals("image/jpeg",listener.getResult().getResult().getType());
+    }
+
+    @Test
+    public void uploadContent_bytes() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_upload_content.json", 200).addHeader("ETag", "eTag"));
+
+        final MockCallback<ComapiResult<UploadContentResponse>> listener = new MockCallback<>();
+
+        service.uploadContent("folder", ContentData.create(new byte[0], "mime_type", "name"), listener);
+
+        synchronized (listener) {
+            listener.wait(TIME_OUT);
+        }
+
+        assertEquals(true, listener.getResult().isSuccessful());
+        assertEquals(200, listener.getResult().getCode());
+        assertNotNull(listener.getResult().getETag());
+        assertEquals("id",listener.getResult().getResult().getId());
+        assertEquals("folder",listener.getResult().getResult().getFolder());
+        assertEquals(2662193, listener.getResult().getResult().getSize().longValue());
+        assertEquals("fullURL",listener.getResult().getResult().getUrl());
+        assertEquals("image/jpeg",listener.getResult().getResult().getType());
     }
 
     @After

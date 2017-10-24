@@ -18,39 +18,76 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.comapi.internal.network.model.events.conversation;
+package com.comapi.internal.network.model.messaging;
 
-import com.comapi.internal.network.model.conversation.ConversationDetails;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Event received trough socket. Conversation was created.
+ * Response to unload content request. Returnes details about stored content data.
  *
  * @author Marcin Swierczek
  * @since 1.0.0
- * @deprecated This event won't be emitted by the SDK. The correct way to update local db with a conversation we were added to as a participant is to listen to {@link ParticipantAddedEvent} events (first per conversationId).
  */
-@Deprecated
-public class ConversationCreateEvent extends ConversationEvent {
+public class UploadContentResponse {
 
-    public static final String TYPE = "conversation.create";
+    @SerializedName("folder")
+    private String folder;
 
-    @SerializedName("payload")
-    protected ConversationDetails payload;
+    @SerializedName("id")
+    private String id;
+
+    @SerializedName("size")
+    private Long size;
+
+    @SerializedName("type")
+    private String type;
+
+    @SerializedName("url")
+    private String url;
 
     /**
-     * Gets details of a created conversation
+     * Folder informs about internal categorisation of the file.
      *
-     * @return Conversation details.
+     * @return Folder name on server storage.
      */
-    public ConversationDetails getConversation() {
-        return payload;
+    public String getFolder() {
+        return folder;
     }
 
-    @Override
-    public String toString() {
-        return super.toString() +
-                " | conversationId = " + payload.getId() +
-                " | name = " + payload.getName();
+    /**
+     * Id of uploaded file.
+     *
+     * @return Id of uploaded file.
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Size of uploaded data.
+     *
+     * @return Size of uploaded data.
+     */
+    public Long getSize() {
+        return size;
+    }
+
+    /**
+     * a
+     * Mime Type of uploaded data.
+     *
+     * @return Mime Type of uploaded data.
+     */
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * Url pointing to the stored file.
+     *
+     * @return Url pointing to the stored file.
+     */
+    public String getUrl() {
+        return url;
     }
 }

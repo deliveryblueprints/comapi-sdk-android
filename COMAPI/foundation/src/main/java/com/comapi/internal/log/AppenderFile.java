@@ -24,9 +24,12 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
@@ -34,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import rx.Observable;
-import rx.Subscriber;
+import rx.exceptions.Exceptions;
 import rx.schedulers.Schedulers;
 
 /**
@@ -114,7 +117,7 @@ class AppenderFile extends Appender {
     }
 
     @Override
-    public void appendLog(final String clazz, final int logLevel, final String msg, final Throwable exception) {
+    public void appendLog(final String tag, final int logLevel, final String msg, final Throwable exception) {
 
         Context context = appContextRef.get();
 
@@ -131,7 +134,7 @@ class AppenderFile extends Appender {
                         outputStream = context.openFileOutput(name(1), Context.MODE_APPEND);
 
                         if (outputStream != null) {
-                            outputStream.write(formatter.formatMessage(logLevel, msg, exception).getBytes(Charset.forName("UTF-8")));
+                            outputStream.write(formatter.formatMessage(logLevel, tag, msg, exception).getBytes(Charset.forName("UTF-8")));
                             outputStream.flush();
                             outputStream.close();
                         }
@@ -213,52 +216,113 @@ class AppenderFile extends Appender {
      */
     private Observable<String> loadLogsObservable() {
 
-        return Observable.create(
+        return Observable.fromCallable(() -> {
 
-                new Observable.OnSubscribe<String>() {
+            StringBuilder sb = new StringBuilder();
 
-                    @Override
-                    public void call(Subscriber<? super String> sub) {
+            Context context = appContextRef.get();
 
-                        StringBuilder sb = new StringBuilder();
+            if (context != null) {
 
-                        Context context = appContextRef.get();
+                synchronized (sharedLock) {
 
-                        if (context != null) {
+                    try {
 
-                            synchronized (sharedLock) {
+                        File dir = context.getFilesDir();
 
-                                try {
+                        String line;
 
-                                    File dir = context.getFilesDir();
+                        for (int i = 1; i <= maxFiles; i++) {
 
-                                    String line;
+                            File file = new File(dir, name(i));
 
-                                    for (int i = 1; i <= maxFiles; i++) {
-
-                                        File file = new File(dir, name(i));
-
-                                        if (file.exists()) {
-                                            inputStream = new FileInputStream(file);
-                                            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                                            while ((line = reader.readLine()) != null) {
-                                                sb.append(line).append('\n');
-                                            }
-                                            reader.close();
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    sub.onError(e);
-                                } finally {
-                                    sharedLock.notifyAll();
+                            if (file.exists()) {
+                                inputStream = new FileInputStream(file);
+                                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                                while ((line = reader.readLine()) != null) {
+                                    sb.append(line).append('\n');
                                 }
+                                reader.close();
                             }
                         }
-
-                        sub.onNext(sb.toString());
-                        sub.onCompleted();
+                    } catch (Exception e) {
+                        throw Exceptions.propagate(e);
+                    } finally {
+                        sharedLock.notifyAll();
                     }
                 }
-        );
+            }
+
+            return sb.toString();
+        });
+    }
+
+    /**
+     * Create observable returning same file that was passed as a parameter but with merged content of internal log files.
+     *
+     * @param mergedFile Instance of a file to merge logs into.
+     * @return Observable returning an instance of a file with logs merged into.
+     */
+    Observable<File> mergeLogs(@NonNull File mergedFile) {
+
+        return Observable.fromCallable(() -> {
+            synchronized (sharedLock) {
+                try {
+                    mergeFiles(mergedFile);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    sharedLock.notifyAll();
+                }
+            }
+            return mergedFile;
+        }).subscribeOn(Schedulers.from(executor));
+    }
+
+    /**
+     * Merged content of internal log files.
+     *
+     * @param mergedFile Instance of a file to merge logs into.
+     */
+    private void mergeFiles(@NonNull File mergedFile) throws IOException {
+
+        Context context = appContextRef.get();
+
+        if (context != null) {
+
+            FileWriter fw;
+            BufferedWriter bw;
+            fw = new FileWriter(mergedFile, true);
+            bw = new BufferedWriter(fw);
+
+            File dir = context.getFilesDir();
+            for (int i = 1; i <= maxFiles; i++) {
+
+                File file = new File(dir, name(i));
+                if (file.exists()) {
+
+                    FileInputStream fis;
+                    try {
+
+                        fis = new FileInputStream(file);
+                        BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                        //noinspection TryFinallyCanBeTryWithResources
+                        try {
+                            String aLine;
+                            while ((aLine = br.readLine()) != null) {
+                                bw.write(aLine);
+                                bw.newLine();
+                            }
+                        } finally {
+                            br.close();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            bw.close();
+        }
     }
 }

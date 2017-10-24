@@ -38,6 +38,14 @@ import java.util.Map;
  */
 public class APIHelper {
 
+    /**
+     * Convenience method to create a Message object with a single text body part.
+     *
+     * @param conversationId Unique conversation id.
+     * @param body           Message text body.
+     * @param title          Remote notification title.
+     * @return Message object that can by sent to other participants of the conversation.
+     */
     public static MessageToSend createMessage(@NonNull String conversationId, @NonNull String body, @Nullable String title) {
 
         Part bodyPart = Part.builder().setData(body).setName("body").setSize(body.length()).setType("text/plain").build();
@@ -50,6 +58,9 @@ public class APIHelper {
         return MessageToSend.builder().addPart(bodyPart).setAlert(fcm, apns).build();
     }
 
+    /**
+     * Class to parse remote notification info jason inside a Comapi message.
+     */
     private static class Notification {
 
         @SerializedName("title")
@@ -59,7 +70,14 @@ public class APIHelper {
         @SerializedName("tag")
         String tag;
 
-        public Notification(String title, String body, String tag) {
+        /**
+         * Recommended constructor.
+         *
+         * @param title Remote notification title.
+         * @param body  Remote notification title.
+         * @param tag   Remote notification tag identifing a message to avoid duplicates.
+         */
+        Notification(String title, String body, String tag) {
             this.title = title;
             this.body = body;
             this.tag = tag;

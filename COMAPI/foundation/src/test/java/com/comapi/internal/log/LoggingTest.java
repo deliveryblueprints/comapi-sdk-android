@@ -24,6 +24,7 @@ import android.app.Application;
 import android.os.Build;
 
 import com.comapi.BuildConfig;
+import com.comapi.helpers.FileHelper;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -33,15 +34,20 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLog;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Example Robolectric tests to check test automation scripts
@@ -198,6 +204,36 @@ public class LoggingTest {
 
     }
 
+    @Test
+    public void testCopyLogs() throws InterruptedException, IOException {
+
+        String fileName = UUID.randomUUID().toString();
+        File file0 = new File(RuntimeEnvironment.application.getFilesDir(), fileName);
+        //noinspection ResultOfMethodCallIgnored
+
+        LogManager mgr = new LogManager();
+        mgr.init(RuntimeEnvironment.application, LogLevelConst.OFF, LogLevelConst.DEBUG, 10000);
+        Logger log = new Logger(mgr, "LoggingTest");
+
+        log.i("test001");
+        log.w("test002");
+        log.e("test003");
+        log.f("test004", new RuntimeException("e001"));
+        log.d("test005");
+        File file = mgr.copyLogs(file0).toBlocking().first();
+        String text = FileHelper.readFile(file);
+
+        assertNotNull(text);
+        assertTrue(text.contains("[DEBUG][LoggingTest] test005"));
+        assertTrue(text.contains("[WARNING][LoggingTest] test002"));
+        assertTrue(text.contains("[INFO][LoggingTest] test001"));
+        assertTrue(text.contains("[ERROR][LoggingTest] test003"));
+        assertTrue(text.contains("[FATAL][LoggingTest] test004"));
+        assertTrue(text.contains("com.comapi.internal.log.LoggingTest.testCopyLogs"));
+        //noinspection ResultOfMethodCallIgnored
+        file0.delete();
+    }
+
     private String name(int index) {
         // Private config in AppenderFile
         String LOG_FILE_NAME = "comapi_logs_";
@@ -270,5 +306,22 @@ public class LoggingTest {
                 }
                 break;
         }
+    }
+
+    private String loadLogs(File file) throws IOException {
+
+        StringBuilder sb = new StringBuilder();
+        String line;
+
+        if (file.exists()) {
+            FileInputStream inputStream = new FileInputStream(file);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append('\n');
+            }
+            reader.close();
+        }
+
+        return sb.toString();
     }
 }
