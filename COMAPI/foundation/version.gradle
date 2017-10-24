@@ -4,7 +4,7 @@
 
 */
 
-ext.foundationVersion = '1.0.3'
+ext.foundationVersion = '1.1.0'
 
 def isFoundationRelease = System.getenv("isparagonrelease")
 ext.isReleaseVersion = isFoundationRelease != null ? isFoundationRelease : false
@@ -34,5 +34,3 @@ task printBuildNumber << {
     logger.lifecycle("Build number is " + foundationBuildNumber)
     println foundationBuildNumber
 }
-
-//logger.lifecycle("##teamcity[buildNumber '"+foundationBuildNumber+"']")
