@@ -39,6 +39,7 @@ import com.comapi.helpers.MockCallback;
 import com.comapi.helpers.ResponseTestHelper;
 import com.comapi.internal.CallbackAdapter;
 import com.comapi.internal.ComapiException;
+import com.comapi.internal.ListenerListAdapter;
 import com.comapi.internal.data.DataManager;
 import com.comapi.internal.data.SessionData;
 import com.comapi.internal.log.LogLevel;
@@ -80,7 +81,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricGradleTestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
@@ -91,7 +92,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -114,7 +114,7 @@ import static org.robolectric.RuntimeEnvironment.application;
  * @author Marcin Swierczek
  * @since 1.0.0
  */
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 @Config(manifest = "foundation/src/main/AndroidManifest.xml", sdk = Build.VERSION_CODES.M, constants = BuildConfig.class, packageName = "com.comapi")
 public class ServiceCallbackTest {
 
@@ -209,72 +209,7 @@ public class ServiceCallbackTest {
         isCreateSessionInProgress = new AtomicBoolean();
         sessionController = service.initialiseSessionController(new SessionCreateManager(isCreateSessionInProgress), pushMgr, comapiState, authenticator, restApi, new Handler(Looper.getMainLooper()), true, new StateListener() {
         });
-        sessionController.setSocketController(new SocketController(dataMgr, new SocketEventListener() {
-            @Override
-            public void onMessageSent(MessageSentEvent event) {
-
-            }
-
-            @Override
-            public void onMessageDelivered(MessageDeliveredEvent event) {
-
-            }
-
-            @Override
-            public void onMessageRead(MessageReadEvent event) {
-
-            }
-
-            @Override
-            public void onSocketStarted(SocketStartEvent event) {
-
-            }
-
-            @Override
-            public void onParticipantAdded(ParticipantAddedEvent event) {
-
-            }
-
-            @Override
-            public void onParticipantUpdated(ParticipantUpdatedEvent event) {
-
-            }
-
-            @Override
-            public void onParticipantRemoved(ParticipantRemovedEvent event) {
-
-            }
-
-            @Override
-            public void onConversationUpdated(ConversationUpdateEvent event) {
-
-            }
-
-            @Override
-            public void onConversationDeleted(ConversationDeleteEvent event) {
-
-            }
-
-            @Override
-            public void onConversationUndeleted(ConversationUndeleteEvent event) {
-
-            }
-
-            @Override
-            public void onProfileUpdate(ProfileUpdateEvent event) {
-
-            }
-
-            @Override
-            public void onParticipantIsTyping(ParticipantTypingEvent event) {
-
-            }
-
-            @Override
-            public void onParticipantTypingOff(ParticipantTypingOffEvent event) {
-
-            }
-        }, log, new URI("ws://auth"), null));
+        sessionController.setSocketController(new SocketController(dataMgr, new ListenerListAdapter(log), log, new URI("ws://auth"), null));
     }
 
     @Test(expected = ComapiException.class)

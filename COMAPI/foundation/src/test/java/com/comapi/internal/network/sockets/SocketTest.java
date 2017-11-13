@@ -29,6 +29,7 @@ import android.support.annotation.NonNull;
 
 import com.comapi.BuildConfig;
 import com.comapi.helpers.DataTestHelper;
+import com.comapi.internal.ListenerListAdapter;
 import com.comapi.internal.data.DataManager;
 import com.comapi.internal.helpers.HelpersTest;
 import com.comapi.internal.lifecycle.LifeCycleController;
@@ -43,7 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
-import org.robolectric.RobolectricGradleTestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.util.ActivityController;
 
@@ -65,7 +66,7 @@ import static org.robolectric.RuntimeEnvironment.application;
  * @author Marcin Swierczek
  * @since 1.0.0
  */
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 @Config(manifest = "com/comapi/src/main/AndroidManifest.xml", sdk = Build.VERSION_CODES.M, constants = BuildConfig.class, packageName = "com.comapi")
 public class SocketTest {
 
@@ -115,7 +116,7 @@ public class SocketTest {
 
         handler = new Handler();
         retryStrategy = new RetryStrategy(1, 0);
-        socketConnectionController = new SocketConnectionController(handler, dataMgr, testSocketFactory, retryStrategy, log) {
+        socketConnectionController = new SocketConnectionController(handler, dataMgr, testSocketFactory, new ListenerListAdapter(log), retryStrategy, log) {
 
             @Override
             public void onConnected() {

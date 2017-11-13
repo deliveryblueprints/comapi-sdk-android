@@ -31,10 +31,19 @@ import com.comapi.internal.network.model.events.SocketStartEvent;
 public interface IStateListener extends ISessionListener {
 
     /**
-     * Socket started successfully.
+     * Socket connected successfully.
      *
      * @param event Socket started successfully event.
      */
     void onSocketStart(SocketStartEvent event);
 
+    /**
+     * Socket disconnected.
+     */
+    void onSocketConnected();
+
+    /**
+     * Socket disconnected.
+     */
+    void onSocketDisconnected();
 }

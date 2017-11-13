@@ -20,7 +20,6 @@
 
 package com.comapi.internal.network;
 
-import android.app.Application;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -35,6 +34,7 @@ import com.comapi.Session;
 import com.comapi.internal.CallbackAdapter;
 import com.comapi.internal.ComapiException;
 import com.comapi.internal.ISessionListener;
+import com.comapi.internal.ListenerListAdapter;
 import com.comapi.internal.data.DataManager;
 import com.comapi.internal.data.SessionData;
 import com.comapi.internal.helpers.APIHelper;
@@ -57,7 +57,6 @@ import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.MessagesQueryResponse;
 import com.comapi.internal.network.model.messaging.UploadContentResponse;
 import com.comapi.internal.network.sockets.SocketController;
-import com.comapi.internal.network.sockets.SocketEventListener;
 import com.comapi.internal.push.PushManager;
 
 import java.util.ArrayList;
@@ -165,7 +164,7 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      * @param baseURIs          APIs baseURIs.
      * @return Client for managing socket connections.
      */
-    public SocketController initialiseSocketClient(@NonNull SessionController sessionController, SocketEventListener listener, APIConfig.BaseURIs baseURIs) {
+    public SocketController initialiseSocketClient(@NonNull SessionController sessionController, ListenerListAdapter listener, APIConfig.BaseURIs baseURIs) {
         SocketController socketController = new SocketController(dataMgr, listener, log, baseURIs.getSocket(), baseURIs.getProxy());
         sessionController.setSocketController(socketController);
         if (isSessionValid()) {

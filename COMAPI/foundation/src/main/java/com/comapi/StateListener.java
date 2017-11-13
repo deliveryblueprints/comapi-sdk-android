@@ -36,13 +36,26 @@ public abstract class StateListener implements IStateListener {
      *
      * @param session New session details.
      */
+    @Override
     public void onSessionStart(Session session) {}
 
     /**
-     * Socket started successfully.
+     * Socket started successfully. Received confirmation event from the server.
      *
      * @param event Socket started successfully event.
      */
+    @Override
     public void onSocketStart(SocketStartEvent event) {}
 
+    /**
+     * Socket disconnected.
+     */
+    @Override
+    public void onSocketDisconnected() {}
+
+    /**
+     * Socket connected.
+     */
+    @Override
+    public void onSocketConnected() {}
 }

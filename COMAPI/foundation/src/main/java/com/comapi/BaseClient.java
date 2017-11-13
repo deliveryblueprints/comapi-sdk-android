@@ -97,7 +97,7 @@ public abstract class BaseClient<T> implements IClient<T> {
     /**
      * Adapter to dispatch events to multiple external listeners.
      */
-    private ListenerListAdapter listenerListAdapter;
+    protected ListenerListAdapter listenerListAdapter;
 
     /**
      * Recommended constructor.
