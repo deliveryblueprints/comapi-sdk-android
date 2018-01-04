@@ -224,11 +224,11 @@ public class LoggingTest {
         String text = FileHelper.readFile(file);
 
         assertNotNull(text);
-        assertTrue(text.contains("[DEBUG][LoggingTest] test005"));
-        assertTrue(text.contains("[WARNING][LoggingTest] test002"));
-        assertTrue(text.contains("[INFO][LoggingTest] test001"));
-        assertTrue(text.contains("[ERROR][LoggingTest] test003"));
-        assertTrue(text.contains("[FATAL][LoggingTest] test004"));
+        assertTrue(text.contains("test005"));
+        assertTrue(text.contains("test002"));
+        assertTrue(text.contains("test001"));
+        assertTrue(text.contains("test003"));
+        assertTrue(text.contains("test004"));
         assertTrue(text.contains("com.comapi.internal.log.LoggingTest.testCopyLogs"));
         //noinspection ResultOfMethodCallIgnored
         file0.delete();

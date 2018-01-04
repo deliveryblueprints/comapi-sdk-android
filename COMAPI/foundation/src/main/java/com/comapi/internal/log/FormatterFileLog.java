@@ -41,9 +41,9 @@ class FormatterFileLog extends Formatter {
      */
     String formatMessage(int msgLogLevel, String tag, String msg, Throwable exception) {
         if (exception != null) {
-            return DateHelper.getUTC(System.currentTimeMillis()) + getLevelTag(msgLogLevel) + "[" + tag + "] " + msg + "\n" + getStackTrace(exception) + "\n";
+            return DateHelper.getUTC(System.currentTimeMillis()) + "/" + getLevelTag(msgLogLevel) + tag + ": " + msg + "\n" + getStackTrace(exception) + "\n";
         } else {
-            return DateHelper.getUTC(System.currentTimeMillis()) + getLevelTag(msgLogLevel) + "[" + tag + "] " + msg + "\n";
+            return DateHelper.getUTC(System.currentTimeMillis()) + "/" + getLevelTag(msgLogLevel) + tag + ": " + msg + "\n";
         }
     }
 

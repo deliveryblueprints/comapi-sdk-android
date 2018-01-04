@@ -32,11 +32,11 @@ class FormatterConsoleLog extends Formatter {
      * Formats log message for console output. Short version.
      *
      * @param msgLogLevel Message log level.
-     * @param clazz       Class name in which message was logged.
+     * @param module       SDK module details
      * @param msg         Log message.
      * @return Formatted log message.
      */
-    String formatMessage(int msgLogLevel, String clazz, String msg) {
-        return getLevelTag(msgLogLevel) + "[" + clazz + "]: " + msg;
+    String formatMessage(int msgLogLevel, String module, String msg) {
+        return getLevelTag(msgLogLevel) + module + ": " + msg;
     }
 }
