@@ -31,31 +31,31 @@ public interface LogConstants {
     /**
      * Default tag for {@link Logger}s
      */
-    String TAG = "Comapi";
+    String TAG = "FDN";
 
     /**
      * See {@link LogLevel#FATAL}
      */
-    String TAG_FATAL = "[FATAL]";
+    String TAG_FATAL = "F/";
 
     /**
      * See {@link LogLevel#ERROR}
      */
-    String TAG_ERROR = "[ERROR]";
+    String TAG_ERROR = "E/";
 
     /**
      * See {@link LogLevel#WARNING}
      */
-    String TAG_WARNING = "[WARNING]";
+    String TAG_WARNING = "W/";
 
     /**
      * See {@link LogLevel#INFO}
      */
-    String TAG_INFO = "[INFO]";
+    String TAG_INFO = "I/";
 
     /**
      * See {@link LogLevel#DEBUG}
      */
-    String TAG_DEBUG = "[DEBUG]";
+    String TAG_DEBUG = "D/";
 
 }

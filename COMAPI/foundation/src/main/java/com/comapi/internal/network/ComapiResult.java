@@ -78,7 +78,7 @@ public class ComapiResult<T> {
             if (response.errorBody() != null) {
                 errorBody = response.errorBody().string();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

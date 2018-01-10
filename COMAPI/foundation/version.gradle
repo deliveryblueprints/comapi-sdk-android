@@ -4,7 +4,7 @@
 
 */
 
-ext.foundationVersion = '1.1.1'
+ext.foundationVersion = '1.2.0'
 
 def isFoundationRelease = System.getenv("isparagonrelease")
 ext.isReleaseVersion = isFoundationRelease != null ? isFoundationRelease : false

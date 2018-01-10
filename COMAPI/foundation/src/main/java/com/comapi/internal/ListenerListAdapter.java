@@ -132,6 +132,30 @@ public class ListenerListAdapter implements SocketEventListener, ISessionListene
         }
     }
 
+    public void onSocketConnected() {
+        log.d("TEST listener onSocketConnected triggered");
+        for (IStateListener listener : stateListeners) {
+            try {
+                log.d("TEST listener onSocketConnected listener found");
+                listener.onSocketConnected();
+            } catch (Exception e) {
+                logError(e, "socket connected");
+            }
+        }
+    }
+
+    public void onSocketDisconnected() {
+        log.d("TEST listener onSocketDisconnected triggered");
+        for (IStateListener listener : stateListeners) {
+            try {
+                log.d("TEST listener onSocketDisconnected listener found");
+                listener.onSocketDisconnected();
+            } catch (Exception e) {
+                logError(e, "socket disconnected");
+            }
+        }
+    }
+
     @Override
     public void onParticipantAdded(ParticipantAddedEvent event) {
         for (IMessagingListener listener : messagingListeners) {
@@ -292,6 +316,8 @@ public class ListenerListAdapter implements SocketEventListener, ISessionListene
     }
 
     private void logError(Exception e, String details) {
-        log.f("Couldn't deliver event ("+details+") Exception in external callback implementation.", e);
+        if (log != null) {
+            log.f("Couldn't deliver event (" + details + ") Exception in external callback implementation.", e);
+        }
     }
 }

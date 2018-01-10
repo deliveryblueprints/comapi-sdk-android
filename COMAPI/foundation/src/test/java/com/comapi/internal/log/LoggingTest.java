@@ -29,7 +29,7 @@ import com.comapi.helpers.FileHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricGradleTestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLog;
@@ -55,7 +55,7 @@ import static org.junit.Assert.assertTrue;
  * @author Marcin Swierczek
  * @since 1.0.0
  */
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 @Config(manifest = "foundation/src/main/AndroidManifest.xml", sdk = Build.VERSION_CODES.M, constants = BuildConfig.class, packageName = "com.comapi")
 public class LoggingTest {
 
@@ -224,11 +224,11 @@ public class LoggingTest {
         String text = FileHelper.readFile(file);
 
         assertNotNull(text);
-        assertTrue(text.contains("[DEBUG][LoggingTest] test005"));
-        assertTrue(text.contains("[WARNING][LoggingTest] test002"));
-        assertTrue(text.contains("[INFO][LoggingTest] test001"));
-        assertTrue(text.contains("[ERROR][LoggingTest] test003"));
-        assertTrue(text.contains("[FATAL][LoggingTest] test004"));
+        assertTrue(text.contains("test005"));
+        assertTrue(text.contains("test002"));
+        assertTrue(text.contains("test001"));
+        assertTrue(text.contains("test003"));
+        assertTrue(text.contains("test004"));
         assertTrue(text.contains("com.comapi.internal.log.LoggingTest.testCopyLogs"));
         //noinspection ResultOfMethodCallIgnored
         file0.delete();

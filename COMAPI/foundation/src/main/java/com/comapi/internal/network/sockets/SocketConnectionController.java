@@ -24,6 +24,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.comapi.internal.ListenerListAdapter;
 import com.comapi.internal.NetworkConnectivityListener;
 import com.comapi.internal.data.DataManager;
 import com.comapi.internal.data.SessionData;
@@ -44,6 +45,8 @@ class SocketConnectionController implements SocketStateListener, NetworkConnecti
 
     private final DataManager dataMgr;
 
+    private final ListenerListAdapter listener;
+
     private SocketInterface socket;
 
     private boolean isManagingReconnection;
@@ -61,14 +64,16 @@ class SocketConnectionController implements SocketStateListener, NetworkConnecti
     /**
      * Recommended constructor.
      *
-     * @param handler       main thread handler to schedule reconections.
+     * @param handler       main thread handler to schedule reconnection.
      * @param dataMgr       Data Manager to obtain latest authentication token.
      * @param factory       Factory class to create SocketInterface instance.
+     * @param listener      Listener adapter dispatching events to registered external listener objects.
      * @param retryStrategy Strategy for socket connection retries.
      */
-    SocketConnectionController(@NonNull Handler handler, @NonNull DataManager dataMgr, @NonNull SocketFactory factory, @NonNull RetryStrategy retryStrategy, @NonNull Logger log) {
+    SocketConnectionController(@NonNull Handler handler, @NonNull DataManager dataMgr, @NonNull SocketFactory factory, @NonNull ListenerListAdapter listener, @NonNull RetryStrategy retryStrategy, @NonNull Logger log) {
         this.dataMgr = dataMgr;
         this.factory = factory;
+        this.listener = listener;
         this.retryStrategy = retryStrategy;
         this.isManagingReconnection = false;
         this.isNetworkUnavailable = false;
@@ -147,6 +152,7 @@ class SocketConnectionController implements SocketStateListener, NetworkConnecti
 
     @Override
     public void onConnected() {
+        listener.onSocketConnected();
         log.i("Socket connected.");
         retryStrategy.reset();
         removeScheduledReconnection();
@@ -154,6 +160,7 @@ class SocketConnectionController implements SocketStateListener, NetworkConnecti
 
     @Override
     public void onDisconnected() {
+        listener.onSocketDisconnected();
         log.i("Socket disconnected.");
         if (shouldReconnect()) {
             scheduleReconnection();

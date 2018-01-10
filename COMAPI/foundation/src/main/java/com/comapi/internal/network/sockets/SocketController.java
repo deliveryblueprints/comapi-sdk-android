@@ -28,6 +28,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
+import com.comapi.internal.ListenerListAdapter;
 import com.comapi.internal.Parser;
 import com.comapi.internal.data.DataManager;
 import com.comapi.internal.log.Logger;
@@ -59,7 +60,7 @@ public class SocketController {
 
     private boolean isForegrounded;
 
-    private final SocketEventListener listener;
+    private final ListenerListAdapter listener;
 
     private final Object lock;
 
@@ -72,7 +73,7 @@ public class SocketController {
      * @param socketURI Socket URI.
      * @param proxyURI  Proxy URI
      */
-    public SocketController(@NonNull DataManager dataMgr, SocketEventListener listener, @NonNull Logger log, @NonNull URI socketURI, URI proxyURI) {
+    public SocketController(@NonNull DataManager dataMgr, ListenerListAdapter listener, @NonNull Logger log, @NonNull URI socketURI, URI proxyURI) {
         this.lock = new Object();
         this.dataMgr = dataMgr;
         this.listener = listener;
@@ -91,7 +92,7 @@ public class SocketController {
             if (isForegrounded) {
                 if (socketConnection == null) {
                     SocketFactory factory = new SocketFactory(socketURI, new SocketEventDispatcher(listener, new Parser()).setLogger(log), log);
-                    socketConnection = new SocketConnectionController(new Handler(Looper.getMainLooper()), dataMgr, factory, new RetryStrategy(60, 60000), log);
+                    socketConnection = new SocketConnectionController(new Handler(Looper.getMainLooper()), dataMgr, factory, listener, new RetryStrategy(60, 60000), log);
                     socketConnection.setProxy(proxyURI);
                     socketConnection.connect();
 
