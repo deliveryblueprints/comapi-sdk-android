@@ -657,7 +657,7 @@ public class ComapiClientTest {
         File merged = pc.copyLogs(file0).toBlocking().first();
         assertNull(merged);
 
-        assertNull(pc.getSession());
+        assertFalse(pc.getSession().isSuccessfullyCreated());
         assertNull(pc.getLogs().toBlocking().first());
     }
 

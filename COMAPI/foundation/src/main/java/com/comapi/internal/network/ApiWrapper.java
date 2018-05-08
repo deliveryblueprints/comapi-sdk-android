@@ -95,6 +95,6 @@ class ApiWrapper {
      * @param msg Message with which the log should start with.
      */
     private void log(@NonNull Logger log, @NonNull Throwable t, String msg) {
-        log.e(msg + ". Error calling services. " + t.getLocalizedMessage());
+        log.f(msg + ". Error calling services. " + t.getLocalizedMessage(), t);
     }
 }

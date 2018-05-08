@@ -274,7 +274,7 @@ public abstract class BaseClient<T> implements IClient<T> {
      */
     @Override
     public Session getSession() {
-        return state.get() > GlobalState.INITIALISING ? new Session(dataMgr.getSessionDAO().session()) : null;
+        return state.get() > GlobalState.INITIALISING ? new Session(dataMgr.getSessionDAO().session()) : new Session();
     }
 
     abstract public T service();

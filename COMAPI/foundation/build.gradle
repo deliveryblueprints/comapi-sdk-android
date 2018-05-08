@@ -58,8 +58,8 @@ dependencies {
     compile 'com.squareup.retrofit2:converter-gson:2.3.0'
     compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
     /*FCM*/
-    compile 'com.google.android.gms:play-services-base:11.6.2'
-    compile 'com.google.firebase:firebase-messaging:11.6.2'
+    compile 'com.google.android.gms:play-services-base:12.0.0'
+    compile 'com.google.firebase:firebase-messaging:12.0.0'
     /*Sockets*/
     compile 'com.neovisionaries:nv-websocket-client:2.3'
 }
