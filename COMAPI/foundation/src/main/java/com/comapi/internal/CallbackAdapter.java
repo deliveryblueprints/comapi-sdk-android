@@ -32,7 +32,7 @@ import rx.schedulers.Schedulers;
 
 /**
  * Adapter to change observables into callbacks. By default it subscribes on io thread and notifies on the main thread.
- * To change that behaviour ovveride CallbackAdapter#adapt(Observable, Callback) method and pass to SDK initialisation method.
+ * To change that behaviour override CallbackAdapter#adapt(Observable, Callback) method and pass to SDK initialisation method.
  *
  * @author Marcin Swierczek
  * @since 1.0.0

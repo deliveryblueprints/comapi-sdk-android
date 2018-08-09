@@ -130,7 +130,7 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      *
      * @return True if Firebase Cloud Messaging is configured and initialised
      */
-    boolean isFcmEnabled() {
+    public boolean isFcmEnabled() {
         return fcmEnabled;
     }
 

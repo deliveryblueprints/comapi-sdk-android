@@ -136,7 +136,6 @@ public class ListenerListAdapter implements SocketEventListener, ISessionListene
         log.d("TEST listener onSocketConnected triggered");
         for (IStateListener listener : stateListeners) {
             try {
-                log.d("TEST listener onSocketConnected listener found");
                 listener.onSocketConnected();
             } catch (Exception e) {
                 logError(e, "socket connected");
@@ -148,7 +147,6 @@ public class ListenerListAdapter implements SocketEventListener, ISessionListene
         log.d("TEST listener onSocketDisconnected triggered");
         for (IStateListener listener : stateListeners) {
             try {
-                log.d("TEST listener onSocketDisconnected listener found");
                 listener.onSocketDisconnected();
             } catch (Exception e) {
                 logError(e, "socket disconnected");

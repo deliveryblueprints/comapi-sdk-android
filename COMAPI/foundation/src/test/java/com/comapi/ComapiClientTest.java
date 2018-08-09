@@ -61,7 +61,7 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowBluetoothAdapter;
-import org.robolectric.util.ActivityController;
+import org.robolectric.android.controller.ActivityController;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -657,7 +657,7 @@ public class ComapiClientTest {
         File merged = pc.copyLogs(file0).toBlocking().first();
         assertNull(merged);
 
-        assertNull(pc.getSession());
+        assertFalse(pc.getSession().isSuccessfullyCreated());
         assertNull(pc.getLogs().toBlocking().first());
     }
 

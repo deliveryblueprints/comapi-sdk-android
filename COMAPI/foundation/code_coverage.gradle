@@ -69,12 +69,15 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "testDebugUnitTest") {
             classesPath = 'foundation/build/intermediates/classes/debug'
         }
 
-        new File(classesPath).eachFileRecurse { file ->
-            if (file.name.contains('$$')) {
-                def oldPath = file.path
-                def newPath = oldPath.replace('$$', '$')
-                file.renameTo(newPath)
-                renamedFilesMap[newPath] = oldPath
+        File dir = new File(classesPath)
+        if (dir.exists()) {
+            dir.eachFileRecurse { file ->
+                if (file.name.contains('$$')) {
+                    def oldPath = file.path
+                    def newPath = oldPath.replace('$$', '$')
+                    file.renameTo(newPath)
+                    renamedFilesMap[newPath] = oldPath
+                }
             }
         }
     }

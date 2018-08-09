@@ -92,8 +92,11 @@ public class RxComapiClient extends BaseClient<RxServiceAccessor> {
 
     /**
      * Gets the content of internal log files.
+     *
+     * @deprecated Use safer version - {@link this#copyLogs(File)} instead.
      */
     @Override
+    @Deprecated
     public Observable<String> getLogs() {
         return super.getLogs();
     }
