@@ -36,6 +36,9 @@ public class Sender {
     @SerializedName("name")
     protected String name;
 
+    @SerializedName("avatarUrl")
+    protected String avatarUrl;
+
     /**
      * Recommended constructor.
      *
@@ -63,5 +66,9 @@ public class Sender {
      */
     public String getName() {
         return name;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 }

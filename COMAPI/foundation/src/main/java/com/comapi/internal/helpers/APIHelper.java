@@ -22,6 +22,7 @@ package com.comapi.internal.helpers;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.Part;
@@ -48,14 +49,18 @@ public class APIHelper {
      */
     public static MessageToSend createMessage(@NonNull String conversationId, @NonNull String body, @Nullable String title) {
 
-        Part bodyPart = Part.builder().setData(body).setName("body").setSize(body.length()).setType("text/plain").build();
-
         Map<String, Object> fcm = new HashMap<>();
-        fcm.put("notification", new Notification(title != null ? title : conversationId, body, conversationId));
+        String fcmMsg = !TextUtils.isEmpty(body) ? body : "attachments";
+        fcm.put("notification", new Notification(title != null ? title : conversationId, fcmMsg, conversationId));
         Map<String, Object> apns = new HashMap<>();
-        apns.put("alert", body);
+        apns.put("alert", fcmMsg);
 
-        return MessageToSend.builder().addPart(bodyPart).setAlert(fcm, apns).build();
+        MessageToSend.Builder builder = MessageToSend.builder();
+        if (!TextUtils.isEmpty(body)) {
+            Part bodyPart = Part.builder().setData(body).setName("body").setSize(body.length()).setType("text/plain").build();
+            builder.addPart(bodyPart);
+        }
+        return builder.setAlert(fcm, apns).build();
     }
 
     /**

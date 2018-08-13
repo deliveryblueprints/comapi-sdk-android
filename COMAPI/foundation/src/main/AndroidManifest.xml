@@ -32,7 +32,7 @@
     <!-- SDK will receive a notification when phone finish booting. This is to restore the services and keep SDK responsive -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <application android:allowBackup="true">
+    <application>
 
         <!-- Broadcast receiver for boot completed broadcasts to resume work after device restart. -->
         <receiver

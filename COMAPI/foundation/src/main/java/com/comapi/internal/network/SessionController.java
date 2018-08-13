@@ -52,7 +52,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import retrofit2.Response;
 import rx.Observable;
 import rx.exceptions.Exceptions;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -259,22 +258,17 @@ public class SessionController extends ApiWrapper {
                         return new ChallengeOptions(startResponse.getNonce());
                     })
                     .takeWhile(challengeOptions -> challengeOptions != null)
-                    .concatMap(new Func1<ChallengeOptions, Observable<String>>() {
-                        @Override
-                        public Observable<String> call(ChallengeOptions challengeOptions) {
-                            return getAuthToken(challengeOptions)
-                                    .timeout(auth.timeoutSeconds(), TimeUnit.SECONDS)
-                                    .retryWhen(errors -> errors.zipWith(Observable.range(1, 3), (n, i) -> {
-                                        if (i >= 3) {
-                                            //noinspection ThrowableResultOfMethodCallIgnored
-                                            Exceptions.propagate(n);
-                                        }
-                                        return i;
-                                    }))
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(Schedulers.io());
-                        }
-                    })
+                    .concatMap(challengeOptions -> getAuthToken(challengeOptions)
+                            .timeout(auth.timeoutSeconds(), TimeUnit.SECONDS)
+                            .retryWhen(errors -> errors.zipWith(Observable.range(1, 3), (n, i) -> {
+                                if (i >= 3) {
+                                    //noinspection ThrowableResultOfMethodCallIgnored
+                                    Exceptions.propagate(n);
+                                }
+                                return i;
+                            }))
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io()))
                     .doOnNext(token -> log.d("Received 3rd party auth token: " + token))
                     .map(token -> getSessionCreateRequest(token, sessionCreateManager.getSessionAuthId(), deviceId))
                     .concatMap(sessionCreateRequest -> service.createSession(apiSpaceId, sessionCreateRequest)
