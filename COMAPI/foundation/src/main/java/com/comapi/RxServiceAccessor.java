@@ -39,6 +39,7 @@ import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.MessagesQueryResponse;
 import com.comapi.internal.network.model.messaging.UploadContentResponse;
+import com.comapi.internal.network.model.profile.ComapiProfile;
 
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,15 @@ public class RxServiceAccessor {
      */
     public ProfileService profile() {
         return service;
+    }
+
+    /**
+     * Access COMAPI Service profile APIs.
+     *
+     * @return COMAPI Service profile APIs.
+     */
+    public RxServiceAccessor.ProfileServiceWithDefaults profileWithDefaults() {
+        return service.getProfileServiceWithDefaults();
     }
 
     /**
@@ -172,6 +182,56 @@ public class RxServiceAccessor {
          * @return Observable with to perform patch profile for current session.
          */
         Observable<ComapiResult<Map<String, Object>>> patchMyProfile(@NonNull final Map<String, Object> profileDetails, final String eTag);
+    }
+
+    /**
+     * Public interface to access ComapiImpl services limited to user profiles functionality.
+     *
+     * @author Marcin Swierczek
+     * @since 1.0.0
+     * Copyright (C) Donky Networks Ltd. All rights reserved.
+     */
+    public interface ProfileServiceWithDefaults {
+
+        /**
+         * Get profile details from the service.
+         *
+         * @param profileId Profile Id of the user.
+         * @return Profile details from the service.
+         */
+        Observable<ComapiResult<ComapiProfile>> getProfile(@NonNull final String profileId);
+
+        /**
+         * Query user profiles on the services.
+         *
+         * @param queryString Query string. See https://www.npmjs.com/package/mongo-querystring for query syntax. You can use {@link QueryBuilder} helper class to construct valid query string.
+         * @return Profiles detail from the service.
+         */
+        Observable<ComapiResult<List<ComapiProfile>>> queryProfiles(@NonNull final String queryString);
+
+        /**
+         * Updates profile for an active session.
+         *
+         * @param profileDetails Profile details.
+         * @return Observable with to perform update profile for current session.
+         */
+        Observable<ComapiResult<ComapiProfile>> updateProfile(@NonNull final ComapiProfile profileDetails, final String eTag);
+
+        /**
+         * Applies given profile patch if required permission is granted.
+         *
+         * @param profileDetails Profile details.
+         * @return Observable with to perform patch profile for current session.
+         */
+        Observable<ComapiResult<ComapiProfile>> patchProfile(@NonNull String profileId, @NonNull final ComapiProfile profileDetails, final String eTag);
+
+        /**
+         * Applies profile patch for an active session.
+         *
+         * @param profileDetails Profile details.
+         * @return Observable with to perform patch profile for current session.
+         */
+        Observable<ComapiResult<ComapiProfile>> patchMyProfile(@NonNull final ComapiProfile profileDetails, final String eTag);
     }
 
     /**

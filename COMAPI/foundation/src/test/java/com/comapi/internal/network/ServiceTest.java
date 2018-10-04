@@ -49,6 +49,7 @@ import com.comapi.internal.network.model.messaging.MessageStatus;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.OrphanedEvent;
 import com.comapi.internal.network.model.messaging.Part;
+import com.comapi.internal.network.model.profile.ComapiProfile;
 import com.comapi.internal.network.sockets.SocketController;
 import com.comapi.internal.push.PushManager;
 import com.comapi.mock.MockAuthenticator;
@@ -82,6 +83,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 import static org.robolectric.RuntimeEnvironment.application;
 
 /**
@@ -219,6 +221,27 @@ public class ServiceTest {
     }
 
     @Test
+    public void getProfileWithDefaults() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_get.json", 200).addHeader("ETag", "eTag"));
+
+        service.getProfileServiceWithDefaults().getProfile("profileId").toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertEquals("id", response.getResult().get("id"));
+            assertEquals("firstName", response.getResult().getFirstName());
+            assertEquals("lastName", response.getResult().getLastName());
+            assertEquals("email", response.getResult().getEmail());
+            assertEquals("gender", response.getResult().getGender());
+            assertEquals("phoneNumber", response.getResult().getPhoneNumber());
+            assertEquals("phoneNumberCountryCode", response.getResult().getPhoneNumberCountryCode());
+            assertEquals("profilePicture", response.getResult().getProfilePicture());
+            assertEquals("custom", response.getResult().get("custom"));
+            assertNotNull(response.getETag());
+        });
+    }
+
+    @Test
     public void getProfile_sessionCreateInProgress() throws Exception {
 
         isCreateSessionInProgress.set(true);
@@ -331,6 +354,60 @@ public class ServiceTest {
     }
 
     @Test
+    public void queryProfileWithDefaults() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_query.json", 200).addHeader("ETag", "eTag"));
+
+        List<String> list = new ArrayList<>();
+        list.add("");
+
+        String query = new QueryBuilder()
+                .addContains("", "")
+                .addEndsWith("", "")
+                .addEqual("", "")
+                .addExists("")
+                .addGreaterOrEqualThan("", "")
+                .addLessOrEqualThan("", "")
+                .addLessThan("", "")
+                .addGreaterThan("", "")
+                .addNotExists("")
+                .addStartsWith("", "")
+                .addUnequal("", "")
+                .inArray("", list)
+                .notInArray("", list)
+                .build();
+
+        assertNotNull(query);
+
+        service.getProfileServiceWithDefaults().queryProfiles(query).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+
+            ComapiProfile profile = null;
+            for (ComapiProfile p : response.getResult()) {
+                if (p.getId().equals("id")) {
+                    profile = p;
+                    break;
+                }
+            }
+
+            if (profile != null) {
+                assertEquals("firstName", profile.getFirstName());
+                assertEquals("lastName", profile.getLastName());
+                assertEquals("email", profile.getEmail());
+                assertEquals("gender", profile.getGender());
+                assertEquals("phoneNumber", profile.getPhoneNumber());
+                assertEquals("phoneNumberCountryCode", profile.getPhoneNumberCountryCode());
+                assertEquals("profilePicture", profile.getProfilePicture());
+                assertEquals("custom", profile.get("custom"));
+                assertNotNull(response.getETag());
+            } else {
+                fail("no profile with id = id");
+            }
+        });
+    }
+
+    @Test
     public void queryProfile_sessionCreateInProgress() throws Exception {
         isCreateSessionInProgress.set(true);
         service.queryProfiles("query").timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
@@ -384,6 +461,30 @@ public class ServiceTest {
     }
 
     @Test
+    public void updateProfileWithDefaults() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_update.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        service.getProfileServiceWithDefaults().updateProfile(new ComapiProfile(map), "eTag").toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertEquals("firstName", response.getResult().getFirstName());
+            assertEquals("lastName", response.getResult().getLastName());
+            assertEquals("email", response.getResult().getEmail());
+            assertEquals("gender", response.getResult().getGender());
+            assertEquals("phoneNumber", response.getResult().getPhoneNumber());
+            assertEquals("phoneNumberCountryCode", response.getResult().getPhoneNumberCountryCode());
+            assertEquals("profilePicture", response.getResult().getProfilePicture());
+            assertEquals("custom", response.getResult().get("custom"));
+            assertNotNull(response.getETag());
+        });
+    }
+
+    @Test
     public void updateProfile_sessionCreateInProgress() throws Exception {
         isCreateSessionInProgress.set(true);
         service.updateProfile(new HashMap<>(), null).timeout(3, TimeUnit.SECONDS).subscribe(getEmptyObserver());
@@ -424,6 +525,30 @@ public class ServiceTest {
     }
 
     @Test
+    public void patchProfileWithDefaults() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        service.getProfileServiceWithDefaults().patchMyProfile(new ComapiProfile(map), "eTag").toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertEquals("firstName", response.getResult().getFirstName());
+            assertEquals("lastName", response.getResult().getLastName());
+            assertEquals("email", response.getResult().getEmail());
+            assertEquals("gender", response.getResult().getGender());
+            assertEquals("phoneNumber", response.getResult().getPhoneNumber());
+            assertEquals("phoneNumberCountryCode", response.getResult().getPhoneNumberCountryCode());
+            assertEquals("profilePicture", response.getResult().getProfilePicture());
+            assertEquals("custom", response.getResult().get("custom"));
+            assertNotNull(response.getETag());
+        });
+    }
+
+    @Test
     public void patchProfile2() throws Exception {
 
         server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
@@ -436,6 +561,31 @@ public class ServiceTest {
             assertEquals(true, response.isSuccessful());
             assertEquals(200, response.getCode());
             assertNotNull(response.getResult().get("id"));
+            assertNotNull(response.getETag());
+        });
+    }
+
+    @Test
+    public void patchProfileWithDefaults2() throws Exception {
+
+        server.enqueue(ResponseTestHelper.createMockResponse(this, "rest_profile_patch.json", 200).addHeader("ETag", "eTag"));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", "value");
+        map.put("key2", 312);
+
+        service.getProfileServiceWithDefaults().patchProfile("someId", new ComapiProfile(map), null).toBlocking().forEach(response -> {
+            assertEquals(true, response.isSuccessful());
+            assertEquals(200, response.getCode());
+            assertNotNull(response.getResult().get("id"));
+            assertEquals("firstName", response.getResult().getFirstName());
+            assertEquals("lastName", response.getResult().getLastName());
+            assertEquals("email", response.getResult().getEmail());
+            assertEquals("gender", response.getResult().getGender());
+            assertEquals("phoneNumber", response.getResult().getPhoneNumber());
+            assertEquals("phoneNumberCountryCode", response.getResult().getPhoneNumberCountryCode());
+            assertEquals("profilePicture", response.getResult().getProfilePicture());
+            assertEquals("custom", response.getResult().get("custom"));
             assertNotNull(response.getETag());
         });
     }

@@ -30,6 +30,8 @@ import com.comapi.APIConfig;
 import com.comapi.Callback;
 import com.comapi.ComapiAuthenticator;
 import com.comapi.QueryBuilder;
+import com.comapi.RxServiceAccessor;
+import com.comapi.ServiceAccessor;
 import com.comapi.Session;
 import com.comapi.internal.CallbackAdapter;
 import com.comapi.internal.ComapiException;
@@ -56,6 +58,7 @@ import com.comapi.internal.network.model.messaging.MessageStatusUpdate;
 import com.comapi.internal.network.model.messaging.MessageToSend;
 import com.comapi.internal.network.model.messaging.MessagesQueryResponse;
 import com.comapi.internal.network.model.messaging.UploadContentResponse;
+import com.comapi.internal.network.model.profile.ComapiProfile;
 import com.comapi.internal.network.sockets.SocketController;
 import com.comapi.internal.push.PushManager;
 
@@ -65,7 +68,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import rx.Observable;
-
 
 /**
  * Manages all service calls checking session state and redirecting to appropriate controllers.
@@ -1011,6 +1013,151 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
             return Observable.error(getSessionStateErrorDescription());
         } else {
             return doCreateFbOptInState(token);
+        }
+    }
+
+    public RxProfileServiceWithDefaultsImpl getProfileServiceWithDefaults() {
+        return new RxProfileServiceWithDefaultsImpl();
+    }
+
+    public ProfileServiceWithDefaultsImpl getProfileServiceWithDefaultsAndCallbacks() {
+        return new ProfileServiceWithDefaultsImpl(new RxProfileServiceWithDefaultsImpl(), adapter);
+    }
+
+    /**
+     * Adding default keys to profile APIs.
+     */
+    public class RxProfileServiceWithDefaultsImpl implements RxServiceAccessor.ProfileServiceWithDefaults {
+
+        private RxProfileServiceWithDefaultsImpl() {
+        }
+
+        /**
+         * Get profile details from the service.
+         *
+         * @param profileId Profile Id of the user.
+         * @return Observable emitting profile details from the service.
+         */
+        public Observable<ComapiResult<ComapiProfile>> getProfile(@NonNull final String profileId) {
+            return InternalService.this.getProfile(profileId).map(result -> new ComapiResult<>(result, new ComapiProfile(result.getResult())));
+        }
+
+        /**
+         * Query user profiles on the services.
+         *
+         * @param queryString Query string. See https://www.npmjs.com/package/mongo-querystring for query syntax. You can use {@link QueryBuilder} helper class to construct valid query string.
+         * @return Observable emitting profiles detail from the service.
+         */
+        public Observable<ComapiResult<List<ComapiProfile>>> queryProfiles(@NonNull final String queryString) {
+            return InternalService.this.queryProfiles(queryString).map(result -> {
+                List<ComapiProfile> list = new ArrayList<>();
+                if (result.isSuccessful() && result.getResult() != null) {
+                    for (Map<String, Object> map : result.getResult()) {
+                        list.add(new ComapiProfile(map));
+                    }
+                }
+                return new ComapiResult<>(result, list);
+            });
+        }
+
+        /**
+         * Updates profile for an active session.
+         *
+         * @param profileDetails Profile details.
+         * @return Observable to perform update profile for current session.
+         */
+        public Observable<ComapiResult<ComapiProfile>> updateProfile(@NonNull final ComapiProfile profileDetails, final String eTag) {
+            return InternalService.this.updateProfile(profileDetails.asMap(), eTag).map(result -> new ComapiResult<>(result, new ComapiProfile(result.getResult())));
+        }
+
+        /**
+         * Applies given profile patch if required permission is granted.
+         *
+         * @param profileId      Profile unique identifier.
+         * @param profileDetails Profile details.
+         * @return Observable to perform patch profile for current session.
+         */
+        public Observable<ComapiResult<ComapiProfile>> patchProfile(@NonNull String profileId, @NonNull final ComapiProfile profileDetails, final String eTag) {
+            return InternalService.this.patchProfile(profileId, profileDetails.asMap(), eTag).map(result -> new ComapiResult<>(result, new ComapiProfile(result.getResult())));
+        }
+
+        /**
+         * Applies profile patch for an active session.
+         *
+         * @param profileDetails Profile details.
+         * @param eTag           Identifier assigned by a web server to a specific version of a resource found at a URL. Use it to validate if you modify latest version of the profile data.
+         * @return Observable to perform patch profile for current session.
+         */
+        public Observable<ComapiResult<ComapiProfile>> patchMyProfile(@NonNull final ComapiProfile profileDetails, final String eTag) {
+            return InternalService.this.patchMyProfile(profileDetails.asMap(), eTag).map(result -> new ComapiResult<>(result, new ComapiProfile(result.getResult())));
+        }
+    }
+
+    /**
+     * Adding default keys to profile APIs.
+     */
+    public static class ProfileServiceWithDefaultsImpl implements ServiceAccessor.ProfileServiceWithDefaults {
+
+        private final CallbackAdapter adapter;
+        private final RxProfileServiceWithDefaultsImpl service;
+
+        private ProfileServiceWithDefaultsImpl(@NonNull RxProfileServiceWithDefaultsImpl service, @NonNull CallbackAdapter adapter) {
+            this.service = service;
+            this.adapter = adapter;
+        }
+
+        /**
+         * Get profile details from the service.
+         *
+         * @param profileId Profile Id of the user.
+         * @param callback  Profile details from the service.
+         */
+        public void getProfile(@NonNull final String profileId, @Nullable Callback<ComapiResult<ComapiProfile>> callback) {
+            adapter.adapt(service.getProfile(profileId), callback);
+        }
+
+        /**
+         * Query user profiles on the services.
+         *
+         * @param queryString Query string. See https://www.npmjs.com/package/mongo-querystring for query syntax. You can use {@link QueryBuilder} helper class to construct valid query string.
+         * @param callback    Profiles detail from the service.
+         */
+        public void queryProfiles(@NonNull final String queryString, @Nullable Callback<ComapiResult<List<ComapiProfile>>> callback) {
+            adapter.adapt(service.queryProfiles(queryString), callback);
+        }
+
+        /**
+         * Updates profile for an active session.
+         *
+         * @param profileDetails New profile details.
+         * @param eTag           Identifier assigned by a web server to a specific version of a resource found at a URL. Use it to validate if you modify latest version of the profile data.
+         * @param callback       Observable with to perform update profile for current session.
+         */
+        public void updateProfile(@NonNull final ComapiProfile profileDetails, final String eTag, @Nullable Callback<ComapiResult<ComapiProfile>> callback) {
+            adapter.adapt(service.updateProfile(profileDetails, eTag), callback);
+        }
+
+        /**
+         * Applies given profile patch if required permission is granted.
+         *
+         * @param profileId      Profile unique identifier.
+         * @param profileDetails New addition to profile details.
+         * @param eTag           Identifier assigned by a web server to a specific version of a resource found at a URL. Use it to validate if you modify latest version of the profile data.
+         * @param callback       Observable with to perform patch profile for current session.
+         */
+        public void patchProfile(@NonNull String profileId, @NonNull final ComapiProfile profileDetails, final String eTag, @Nullable Callback<ComapiResult<ComapiProfile>> callback) {
+            adapter.adapt(service.patchProfile(profileId, profileDetails, eTag), callback);
+        }
+
+        /**
+         * Applies profile patch for an active session.
+         *
+         * @param profileDetails New addition to profile details.
+         * @param eTag           Identifier assigned by a web server to a specific version of a resource found at a URL. Use it to validate if you modify latest version of the profile data.
+         * @param callback       Observable with to perform patch profile for current session.
+         */
+        public void patchMyProfile(@NonNull final ComapiProfile profileDetails, final String eTag, @Nullable Callback<ComapiResult<ComapiProfile>> callback) {
+            adapter.adapt(service.patchMyProfile(profileDetails, eTag), callback);
         }
     }
 }
