@@ -76,6 +76,8 @@ public class RxServiceAccessor {
 
     /**
      * Access COMAPI Service profile APIs.
+     * This APIs version operates with the raw map of profile key-value pairs.
+     * @see this#profileWithDefaults
      *
      * @return COMAPI Service profile APIs.
      */
@@ -85,6 +87,7 @@ public class RxServiceAccessor {
 
     /**
      * Access COMAPI Service profile APIs.
+     * This APIs version wraps the raw map of profile key-value pairs in ComapiProfile objects that introduces default keys that can be understood by the Comapi Portal.
      *
      * @return COMAPI Service profile APIs.
      */
