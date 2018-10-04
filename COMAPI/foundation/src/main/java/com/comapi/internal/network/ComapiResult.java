@@ -20,8 +20,6 @@
 
 package com.comapi.internal.network;
 
-import java.io.IOException;
-
 import retrofit2.Response;
 
 /**
