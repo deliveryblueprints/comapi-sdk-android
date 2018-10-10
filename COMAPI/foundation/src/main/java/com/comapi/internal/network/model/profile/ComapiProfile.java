@@ -29,26 +29,28 @@ public class ComapiProfile {
 
     public ComapiProfile(Map<String, Object> properties) {
 
-        for (String key : properties.keySet()) {
-            if (key.equals(keyId)) {
-                defaultProperties.put(key, (String) properties.get(key));
-            }
-            if (key.equals(keyFirstName)) {
-                setFirstName((String) properties.get(key));
-            } else if (key.equals(keyLastName)) {
-                setLastName((String) properties.get(key));
-            } else if (key.equals(keyEmail)) {
-                setEmail((String) properties.get(key));
-            } else if (key.equals(keyPhoneNumber)) {
-                setPhoneNumber((String) properties.get(key));
-            } else if (key.equals(keyCountryCode)) {
-                setPhoneNumberCountryCode((String) properties.get(key));
-            } else if (key.equals(keyGender)) {
-                setGender((String) properties.get(key));
-            } else if (key.equals(keyProfilePicture)) {
-                setProfilePicture((String) properties.get(key));
-            } else if (!key.startsWith("_")) {
-                add(key, properties.get(key));
+        if (properties != null && !properties.isEmpty()) {
+            for (String key : properties.keySet()) {
+                if (key.equals(keyId)) {
+                    defaultProperties.put(key, (String) properties.get(key));
+                }
+                if (key.equals(keyFirstName)) {
+                    setFirstName((String) properties.get(key));
+                } else if (key.equals(keyLastName)) {
+                    setLastName((String) properties.get(key));
+                } else if (key.equals(keyEmail)) {
+                    setEmail((String) properties.get(key));
+                } else if (key.equals(keyPhoneNumber)) {
+                    setPhoneNumber((String) properties.get(key));
+                } else if (key.equals(keyCountryCode)) {
+                    setPhoneNumberCountryCode((String) properties.get(key));
+                } else if (key.equals(keyGender)) {
+                    setGender((String) properties.get(key));
+                } else if (key.equals(keyProfilePicture)) {
+                    setProfilePicture((String) properties.get(key));
+                } else if (!key.startsWith("_")) {
+                    add(key, properties.get(key));
+                }
             }
         }
     }

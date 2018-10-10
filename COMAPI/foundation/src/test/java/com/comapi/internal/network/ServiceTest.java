@@ -427,11 +427,9 @@ public class ServiceTest {
     public void queryProfile_serverError() throws Exception {
 
         MockResponse response = new MockResponse();
-        response.setResponseCode(500);
-        response.setHttp2ErrorCode(500);
-        response.setBody("{\n" +
-                "  \"key\": \"value\"\n" +
-                "}");
+        response.setResponseCode(400);
+        response.setHttp2ErrorCode(400);
+        response.setBody("{\"validationFailures\":[{\"paramName\":\"someParameter\",\"message\":\"details\"}]}");
         server.enqueue(response);
 
         String query = new QueryBuilder()
@@ -440,6 +438,11 @@ public class ServiceTest {
         service.queryProfiles(query).toBlocking().forEach(result -> {
             assertEquals(false, result.isSuccessful());
             assertNotNull(result.getErrorBody());
+            List<ComapiResult<List<Map<String, Object>>>.ComapiValidationFailure> failures = result.getValidationFailures();
+            assertNotNull(failures);
+            assertEquals(1, failures.size());
+            assertEquals("details", failures.get(0).getMessage());
+            assertEquals("someParameter", failures.get(0).getParamName());
         });
     }
 
