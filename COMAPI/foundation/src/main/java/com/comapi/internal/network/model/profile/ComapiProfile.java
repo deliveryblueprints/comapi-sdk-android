@@ -160,4 +160,23 @@ public class ComapiProfile {
         map.putAll(customProperties);
         return map;
     }
+
+    @Override
+    public String toString() {
+
+        StringBuilder sb = new StringBuilder();
+        Map<String, Object> combined = asMap();
+        if (!combined.isEmpty()) {
+            for (String key : combined.keySet()) {
+                sb.append(key).append(" = ").append(combined.get(key).toString()).append(" ");
+                if (sb.length() > 1000) {
+                    sb.append("...");
+                    break;
+                }
+            }
+        } else {
+            sb.append("<empty profile data>");
+        }
+        return sb.toString().trim();
+    }
 }

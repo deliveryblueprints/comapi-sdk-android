@@ -80,6 +80,7 @@ import rx.Observer;
 
 import static com.comapi.helpers.DataTestHelper.API_SPACE_ID;
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
@@ -237,8 +238,29 @@ public class ServiceTest {
             assertEquals("phoneNumberCountryCode", response.getResult().getPhoneNumberCountryCode());
             assertEquals("profilePicture", response.getResult().getProfilePicture());
             assertEquals("custom", response.getResult().get("custom"));
+            assertNotNull(response.getResult().toString());
             assertNotNull(response.getETag());
         });
+    }
+
+    @Test
+    public void profileToString() {
+
+        ComapiProfile profile = new ComapiProfile();
+        for (int i=0; i<100; i++) {
+            profile.add(String.valueOf(i), "x");
+        }
+
+        assertNotNull(profile.toString());
+        assertFalse(profile.toString().endsWith("..."));
+
+        for (int i=100; i<10000; i++) {
+            profile.add(String.valueOf(i), "x");
+        }
+
+        assertNotNull(profile.toString());
+        assertTrue(profile.toString().length() < 1010);
+        assertTrue(profile.toString().endsWith("..."));
     }
 
     @Test
