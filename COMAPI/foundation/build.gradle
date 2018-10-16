@@ -4,7 +4,7 @@ apply from: 'code_coverage.gradle'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '27.0.3'
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         minSdkVersion 16
@@ -59,8 +59,8 @@ dependencies {
 
     /*FCM*/
     //noinspection GradleCompatible warning disabled (seems to be caused by internal firebase-messaging dependencies versioning)
-    implementation 'com.google.firebase:firebase-messaging:17.1.0'
-    implementation 'com.google.android.gms:play-services-base:15.0.1'
+    implementation 'com.google.firebase:firebase-messaging:17.3.3'
+    implementation 'com.google.android.gms:play-services-base:16.0.1'
 
     /*Sockets*/
     implementation 'com.neovisionaries:nv-websocket-client:2.3'
@@ -192,9 +192,4 @@ generateRelease.dependsOn(zipRelease)
 artifacts {
     archives androidSourcesJar
     archives androidJavadocsJar
-}
-
-apply plugin: 'me.tatarka.retrolambda'
-retrolambda {
-    javaVersion JavaVersion.VERSION_1_7
 }
