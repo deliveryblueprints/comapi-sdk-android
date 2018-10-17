@@ -91,7 +91,8 @@ class AppenderFile extends Appender {
 
     /**
      * Recommended constructor.
-     *  @param appContext   Application Context.
+     *
+     * @param appContext   Application Context.
      * @param logLevel     Logging level that should be used for console output. Messages with higher
      *                     level won't be displayed in logcat.
      * @param formatter    Message formatter. Defines the format of the output.

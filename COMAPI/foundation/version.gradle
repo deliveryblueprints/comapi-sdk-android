@@ -9,10 +9,6 @@ ext.foundationVersion = '1.3.0'
 def isFoundationRelease = System.getenv("isparagonrelease")
 ext.isReleaseVersion = isFoundationRelease != null ? isFoundationRelease : false
 
-if (!isReleaseVersion) {
-    foundationVersion = foundationVersion + '-SNAPSHOT'
-}
-
 if (project.hasProperty("teamcity")) {
     ext.foundationBuildNumber = teamcity['build.number']
 } else {
