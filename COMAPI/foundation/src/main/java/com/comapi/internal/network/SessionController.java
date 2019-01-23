@@ -210,7 +210,9 @@ public class SessionController extends ApiWrapper {
                         if (isFcmEnabled) {
                             return updatePushToken(session)
                                     .doOnNext(pushUpdateResult -> {
-                                        if (!pushUpdateResult.second.isSuccessful()) {
+                                        if (pushUpdateResult.second == null) {
+                                            log.e("Failed to update push token on the server.");
+                                        } else if (!pushUpdateResult.second.isSuccessful()) {
                                             log.e("Failed to update push token on the server. " + pushUpdateResult.second.message());
                                         } else {
                                             log.i("Push token updated on the server.");
@@ -334,7 +336,12 @@ public class SessionController extends ApiWrapper {
         return Observable.create((Observable.OnSubscribe<String>) sub -> {
             String token = dataMgr.getDeviceDAO().device().getPushToken();
             if (TextUtils.isEmpty(token)) {
-                token = pushMgr.getPushToken();
+                try {
+                    token = pushMgr.getPushToken();
+                } catch (Exception e) {
+                    log.e("Error obtaining FCM token. No Google Services on the phone?");
+                }
+
                 if (!TextUtils.isEmpty(token)) {
                     dataMgr.getDeviceDAO().setPushToken(token);
                 }
