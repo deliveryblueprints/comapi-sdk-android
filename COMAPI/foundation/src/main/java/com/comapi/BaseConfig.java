@@ -58,7 +58,7 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      *
      * @return Comapi ApiSpace identifier.
      */
-    String getApiSpaceId() {
+    public String getApiSpaceId() {
         return apiSpaceId;
     }
 
@@ -67,7 +67,7 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      *
      * @return Comapi logging configuration.
      */
-    LogConfig getLogConfig() {
+    public LogConfig getLogConfig() {
         return logConfig;
     }
 
@@ -130,7 +130,7 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      *
      * @return True if Firebase Cloud Messaging is configured and initialised
      */
-    boolean isFcmEnabled() {
+    public boolean isFcmEnabled() {
         return fcmEnabled;
     }
 

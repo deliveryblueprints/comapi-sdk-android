@@ -20,7 +20,12 @@
 
 package com.comapi.internal.network;
 
-import java.io.IOException;
+import android.support.annotation.Nullable;
+
+import com.comapi.internal.Parser;
+import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 
 import retrofit2.Response;
 
@@ -156,5 +161,62 @@ public class ComapiResult<T> {
      */
     public String getErrorBody() {
         return errorBody;
+    }
+
+    /**
+     * Get API call validation failures details.
+     *
+     * @return List of validation failures returned from services. Can be null.
+     */
+    public @Nullable
+    List<ComapiValidationFailure> getValidationFailures() {
+        if (errorBody != null && !errorBody.isEmpty()) {
+            ComapiValidationFailures failures = null;
+            try {
+                failures = new Parser().parse(errorBody, ComapiValidationFailures.class);
+            } catch (Exception e) {
+                return null;
+            }
+            return failures.validationFailures;
+        }
+
+        return null;
+    }
+
+    class ComapiValidationFailures {
+
+        @SerializedName("validationFailures")
+        private List<ComapiValidationFailure> validationFailures;
+
+        public List<ComapiValidationFailure> getValidationFailures() {
+            return validationFailures;
+        }
+    }
+
+    public class ComapiValidationFailure {
+
+        @SerializedName("paramName")
+        private String paramName;
+
+        @SerializedName("message")
+        private String message;
+
+        /**
+         * Name of the JSON parameter that failed the check on the server side.
+         *
+         * @return Name of the JSON parameter.
+         */
+        public String getParamName() {
+            return paramName;
+        }
+
+        /**
+         * Cause of API call validation failure returned from the services.
+         *
+         * @return Cause of API call validation failure.
+         */
+        public String getMessage() {
+            return message;
+        }
     }
 }

@@ -20,6 +20,7 @@
 
 package com.comapi.internal.network.model.events;
 
+import com.comapi.internal.network.model.profile.ComapiProfile;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.Map;
@@ -92,12 +93,21 @@ public class ProfileUpdateEvent extends Event {
     }
 
     /**
-     * Gets profile update details.
+     * Gets row map of profile update details.
      *
      * @return Profile update details.
      */
     public Map<String, Object> getPayload() {
         return payload;
+    }
+
+    /**
+     * Gets profile update details.
+     *
+     * @return Profile update details.
+     */
+    public ComapiProfile getProfileDetails() {
+        return new ComapiProfile(payload);
     }
 
     /**

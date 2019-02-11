@@ -27,12 +27,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Writer;
 import java.lang.ref.WeakReference;
-import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -81,11 +80,6 @@ class AppenderFile extends Appender {
     private final FormatterFileLog formatter;
 
     /**
-     * File output stream to save Donky SDK logs.
-     */
-    private FileOutputStream outputStream;
-
-    /**
      * File input stream to load Donky SDK logs.
      */
     private FileInputStream inputStream;
@@ -108,7 +102,7 @@ class AppenderFile extends Appender {
         super(logLevel);
         this.appContextRef = new WeakReference<>(appContext);
         this.formatter = formatter;
-        executor = Executors.newSingleThreadExecutor();
+        this.executor = Executors.newSingleThreadExecutor();
         if (logSizeLimit >= MIN_LOG_SIZE) {
             this.fileSizeLimitKb = logSizeLimit;
         } else {
@@ -131,10 +125,13 @@ class AppenderFile extends Appender {
 
                         rollOverFiles();
 
-                        outputStream = context.openFileOutput(name(1), Context.MODE_APPEND);
-
-                        if (outputStream != null) {
-                            outputStream.write(formatter.formatMessage(logLevel, tag, msg, exception).getBytes(Charset.forName("UTF-8")));
+                        File mainFile = new File(context.getFilesDir(), name(1));
+                        if (!mainFile.exists()) {
+                            mainFile.createNewFile();
+                        }
+                        if (mainFile.exists() && mainFile.canWrite()) {
+                            Writer outputStream = new BufferedWriter(new FileWriter(mainFile, true), 1024);
+                            outputStream.write(formatter.formatMessage(logLevel, tag, msg, exception));
                             outputStream.flush();
                             outputStream.close();
                         }
@@ -174,7 +171,7 @@ class AppenderFile extends Appender {
 
             if (mainFile.exists()) {
 
-                float fileSize = new File(dir, name(1)).length();
+                float fileSize = mainFile.length();
                 fileSize = fileSize / 1024.0f; //In kilobytes
 
                 if (fileSize > fileSizeLimitKb) {
