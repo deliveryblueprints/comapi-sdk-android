@@ -20,4 +20,4 @@ or Gradle
 compile 'com.comapi:foundation:1.3.0'
 ```
 
-For more information about the integration please visit [the website](http://docs.comapi.com/reference#one-sdk-android-overview).
+For more information about the integration please visit [the website](http://docs.cpaas.dotdigital.com/reference#one-sdk-android-overview).
