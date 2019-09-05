@@ -59,7 +59,7 @@ dependencies {
 
     /*FCM*/
     //noinspection GradleCompatible warning disabled (seems to be caused by internal firebase-messaging dependencies versioning)
-    implementation 'com.google.firebase:firebase-messaging:17.3.4'
+    implementation 'com.google.firebase:firebase-messaging:17.5.0'
     implementation 'com.google.android.gms:play-services-base:16.1.0'
 
     /*Sockets*/
