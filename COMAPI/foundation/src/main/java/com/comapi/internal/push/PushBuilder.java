@@ -119,4 +119,16 @@ class PushBuilder {
     public String getMessageId() {
         return messageId;
     }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public Map<String, String> getClickActionDetails() {
+        return clickActionDetails;
+    }
 }

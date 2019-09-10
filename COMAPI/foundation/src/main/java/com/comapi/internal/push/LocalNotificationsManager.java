@@ -42,7 +42,7 @@ public class LocalNotificationsManager {
         InternalService service = this.service.get();
         if (service != null) {
             log.d("TODO: send `delivered`");
-            callObs(service.updatePushMessageStatus(builder.getMessageId(), "delivered"));
+            //callObs(service.updatePushMessageStatus(builder.getMessageId(), "delivered"));
             //TODO send `delivered` for messageId
         }
 
@@ -66,7 +66,7 @@ public class LocalNotificationsManager {
         InternalService service = this.service.get();
         if (service != null) {
             log.d("TODO: send `read messageId="+messageId);
-            callObs(service.updatePushMessageStatus(messageId, "read"));
+            //callObs(service.updatePushMessageStatus(messageId, "read"));
             //TODO send `read` for messageId
             if (link != null) {
                 log.d("TODO: send `click` messageId="+messageId+" id="+id+" link="+link);
