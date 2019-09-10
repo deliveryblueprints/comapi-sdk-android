@@ -1,5 +1,6 @@
 package com.comapi.internal.push;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
 /**
@@ -85,6 +87,25 @@ public class CustomPushWithAction {
         assertTrue(messageReceived);
     }
 
+    @Test
+    public void testCreateIntent() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
+        LocalNotificationsManager lnm = new LocalNotificationsManager(RuntimeEnvironment.application, new Logger(new LogManager(), ""));
+
+        Method method = lnm.getClass().getDeclaredMethod("createDeepLinkIntent", String.class);
+        method.setAccessible(true);
+        Intent i = (Intent) method.invoke(lnm, "link");
+
+        assertEquals(Intent.ACTION_VIEW, i.getAction());
+        assertTrue(i.getCategories().contains(Intent.CATEGORY_DEFAULT));
+        assertEquals(Intent.ACTION_VIEW, i.getAction());
+
+        Method methodAvailable = lnm.getClass().getDeclaredMethod("isActivityAvailable", Context.class, Intent.class);
+        methodAvailable.setAccessible(true);
+        Boolean isAvailable = (Boolean) methodAvailable.invoke(lnm, RuntimeEnvironment.application, i);
+        assertFalse(isAvailable);
+    }
+    
     @Test
     public void testActionClick() {
         setUp();

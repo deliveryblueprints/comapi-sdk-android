@@ -3,12 +3,17 @@ package com.comapi.internal.push;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
 
 import com.comapi.R;
 import com.comapi.internal.log.Logger;
 import com.comapi.internal.network.InternalService;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -69,6 +74,21 @@ public class LocalNotificationsManager {
             //callObs(service.updatePushMessageStatus(messageId, "read"));
             //TODO send `read` for messageId
             if (link != null) {
+
+                try {
+                    Intent intent = createDeepLinkIntent(link);
+                    Context context = this.context.get();
+                    if (context != null) {
+                        if (isActivityAvailable(context, intent)) {
+                            context.getApplicationContext().startActivity(intent);
+                        }
+                    } else {
+                        log.e("Missing week context reference in LocalNotificationsManager.handleNotification");
+                    }
+                } catch (Exception e) {
+                    log.f("Error creating deep link intent messageId="+messageId+" id="+id+" link="+link, e);
+                }
+
                 log.d("TODO: send `click` messageId="+messageId+" id="+id+" link="+link);
                 //TODO send `click` for link+id
             }
@@ -95,5 +115,22 @@ public class LocalNotificationsManager {
                     @Override
                     public void onNext(T result) {}
                 });
+    }
+
+    private Intent createDeepLinkIntent(String link) {
+        Intent intent = new Intent();
+        intent.setData(Uri.parse(link));
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return intent;
+    }
+
+    private boolean isActivityAvailable(Context context, Intent intent) {
+            final PackageManager mgr = context.getApplicationContext().getPackageManager();
+            List<ResolveInfo> list =
+                    mgr.queryIntentActivities(intent,
+                            PackageManager.MATCH_DEFAULT_ONLY);
+            return list.size() > 0;
     }
 }
