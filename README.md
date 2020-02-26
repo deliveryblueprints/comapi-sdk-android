@@ -1,6 +1,6 @@
-# Android SDK for Comapi
+# dotdigital push and app messaging Android SDK 
 
-Client to connect your Android application with [Comapi](http://comapi.com/) services and add it as a channel to our cloud messaging platform.
+Client to connect your Android application with [dotdigital's Engagement Cloud](http://dotdigital.com/) and CPaaS APIs for push and in-app messgaing.
 
 ## Download
 
