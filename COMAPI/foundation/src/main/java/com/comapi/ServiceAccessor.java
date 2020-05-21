@@ -59,7 +59,7 @@ public class ServiceAccessor {
      *
      * @param service COMAPI service interface.
      */
-    ServiceAccessor(@NonNull InternalService service) {
+    public ServiceAccessor(@NonNull InternalService service) {
         this.service = service;
     }
 
