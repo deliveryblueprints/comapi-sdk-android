@@ -43,7 +43,7 @@ public class ComapiClient extends BaseClient<ServiceAccessor> {
      *
      * @param config Comapi configuration.
      */
-    ComapiClient(final ComapiConfig config) {
+    public ComapiClient(final ComapiConfig config) {
         super(config);
     }
 

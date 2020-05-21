@@ -104,7 +104,7 @@ public abstract class BaseClient<T> implements IClient<T> {
      *
      * @param config ComapiImpl configuration.
      */
-    BaseClient(final ComapiConfig config) {
+    public BaseClient(final ComapiConfig config) {
         state = new AtomicInteger(GlobalState.NOT_INITIALISED);
         this.config = config;
         logMgr = new LogManager();
