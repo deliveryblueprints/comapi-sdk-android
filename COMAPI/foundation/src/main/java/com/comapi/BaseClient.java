@@ -234,17 +234,8 @@ public abstract class BaseClient<T> implements IClient<T> {
         });
     }
 
-    protected Observable<Object> updatePushTokenDirect(final String token) {
-        return this.service.updatePushToken(token)
-                .doOnNext(sessionComapiResultPair -> log.d("Push token updated"))
-                .doOnError(throwable -> log.f("Error updating push token", throwable))
-                .map((Func1<Pair<SessionData, ComapiResult<Void>>, Object>) resultPair -> resultPair.second)
-                .onErrorReturn(new Func1<Throwable, Session>() {
-                    @Override
-                    public Session call(Throwable throwable) {
-                        return getSession();
-                    }
-                });
+    protected void setPushToken(final String token) {
+        dataMgr.getDeviceDAO().setPushToken(token);
     }
 
     /**
