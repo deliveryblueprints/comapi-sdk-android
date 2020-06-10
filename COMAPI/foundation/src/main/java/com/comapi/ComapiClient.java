@@ -24,7 +24,11 @@ import android.app.Application;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import android.util.Pair;
 import com.comapi.internal.CallbackAdapter;
+import com.comapi.internal.data.SessionData;
+import com.comapi.internal.network.ComapiResult;
+import rx.Observable;
 
 import java.io.File;
 
@@ -109,5 +113,9 @@ public class ComapiClient extends BaseClient<ServiceAccessor> {
     @Override
     public void clean(@NonNull Context context) {
         super.clean(context);
+    }
+
+    public void updatePushToken(String token, Callback<Object> callback) {
+        adapter.adapt(super.updatePushTokenDirect(token), callback);
     }
 }

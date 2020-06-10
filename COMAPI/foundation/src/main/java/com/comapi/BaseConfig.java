@@ -206,7 +206,7 @@ public abstract class BaseConfig<T extends BaseConfig<T>> {
      * @param pushTokenProvider Provides push token.
      * @return BaseURIs instance with new value set.
      */
-    T pushTokenProvider(PushTokenProvider pushTokenProvider) {
+    public T pushTokenProvider(PushTokenProvider pushTokenProvider) {
         this.pushTokenProvider = pushTokenProvider;
         return getThis();
     }

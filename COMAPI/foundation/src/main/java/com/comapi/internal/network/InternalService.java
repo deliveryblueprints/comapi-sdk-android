@@ -229,19 +229,32 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
      * @return Observable task for push token registration.
      */
     public Observable<Pair<SessionData, ComapiResult<Void>>> updatePushToken() {
+        return this.updatePushToken(null);
+    }
+
+    public Observable<Pair<SessionData, ComapiResult<Void>>> updatePushToken(String instanceToken) {
 
         final SessionData session = dataMgr.getSessionDAO().session();
 
         if (isSessionValid(session)) {
 
             return wrapObservable(Observable.create((Observable.OnSubscribe<String>) sub -> {
-                String token = dataMgr.getDeviceDAO().device().getPushToken();
-                if (TextUtils.isEmpty(token)) {
-                    token = pushMgr.getPushToken();
-                    if (!TextUtils.isEmpty(token)) {
-                        dataMgr.getDeviceDAO().setPushToken(token);
+
+                String token;
+
+                if(instanceToken != null) {
+                    token = instanceToken;
+                    dataMgr.getDeviceDAO().setPushToken(instanceToken);
+                } else {
+                    token = dataMgr.getDeviceDAO().device().getPushToken();
+                    if (TextUtils.isEmpty(token)) {
+                        token = pushMgr.getPushToken();
+                        if (!TextUtils.isEmpty(token)) {
+                            dataMgr.getDeviceDAO().setPushToken(token);
+                        }
                     }
                 }
+
                 sub.onNext(token);
                 sub.onCompleted();
             }).concatMap(token -> sessionController.doUpdatePush(session, token).map(mapToComapiResult()))
