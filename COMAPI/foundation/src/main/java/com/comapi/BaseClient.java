@@ -234,8 +234,9 @@ public abstract class BaseClient<T> implements IClient<T> {
         });
     }
 
-    protected void setPushToken(final String token) {
+    protected void setPushToken(final String token,Callback<Pair<SessionData, ComapiResult<Void>>> callback) {
         dataMgr.getDeviceDAO().setPushToken(token);
+        service.syncPushToken(callback);
     }
 
     /**

@@ -251,6 +251,15 @@ public class InternalService extends ServiceQueue implements ComapiService, RxCo
         }
     }
 
+
+    public void syncPushToken(Callback<Pair<SessionData, ComapiResult<Void>>> callback) {
+        if (isSessionValid()) {
+            adapter.adapt(updatePushToken(), callback);
+        } else {
+
+        }
+    }
+
     /**
      * Get profile details from the service.
      *

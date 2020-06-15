@@ -115,7 +115,7 @@ public class ComapiClient extends BaseClient<ServiceAccessor> {
         super.clean(context);
     }
 
-    public void updatePushToken(String token) {
-        super.setPushToken(token);
+    public void updatePushToken(String token, Callback<Pair<SessionData, ComapiResult<Void>>> callback) {
+        super.setPushToken(token, callback);
     }
 }
